@@ -1,0 +1,53 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.auth_deps import UsuarioLogado, obter_usuario_atual
+from app.auth_utils import criar_token, verificar_senha
+from app.database import get_supabase
+
+router = APIRouter(prefix="/auth", tags=["Autenticação"])
+
+
+class LoginPayload(BaseModel):
+    usuario: str
+    senha: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    usuario: str
+    nome: str
+    papel: str
+
+
+@router.post("/login", response_model=LoginResponse)
+def login(payload: LoginPayload):
+    sb = get_supabase()
+    resp = sb.table("usuarios").select("*").eq("usuario", payload.usuario).eq("ativo", True).execute()
+
+    if not resp.data:
+        raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
+
+    usuario_db = resp.data[0]
+    if not verificar_senha(payload.senha, usuario_db["senha_hash"]):
+        raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
+
+    token = criar_token(usuario_db["id"], usuario_db["usuario"], usuario_db["papel"])
+    return LoginResponse(
+        token=token,
+        usuario=usuario_db["usuario"],
+        nome=usuario_db["nome"],
+        papel=usuario_db["papel"],
+    )
+
+
+class MeResponse(BaseModel):
+    id: int
+    usuario: str
+    papel: str
+
+
+@router.get("/me", response_model=MeResponse)
+def me(usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+    """Confirma se o token ainda é válido e devolve os dados do usuário logado."""
+    return MeResponse(id=usuario.id, usuario=usuario.usuario, papel=usuario.papel)
