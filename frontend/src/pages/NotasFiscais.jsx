@@ -17,6 +17,7 @@ export default function NotasFiscais() {
   const { isAdmin } = useAuth()
   const [notas, setNotas] = useState([])
   const [maquinas, setMaquinas] = useState([])
+  const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [fornecedores, setFornecedores] = useState([])
   const [carregando, setCarregando] = useState(true)
 
@@ -30,7 +31,10 @@ export default function NotasFiscais() {
   const [editando, setEditando] = useState(null)
 
   useEffect(() => {
+    // lista completa: usada no filtro (permite ver histórico de máquinas inativas/baixadas)
     listarMaquinas().then(setMaquinas).catch(() => {})
+    // só ativas/em manutenção: usada no formulário de nova nota fiscal
+    listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     api.get('/fornecedores').then((r) => setFornecedores(r.data)).catch(() => {})
   }, [])
 
@@ -155,7 +159,7 @@ export default function NotasFiscais() {
       {modalAberto && (
         <NotaFiscalModal
           nota={editando}
-          maquinas={maquinas}
+          maquinas={editando ? maquinas : maquinasDisponiveis}
           fornecedores={fornecedores}
           onClose={() => setModalAberto(false)}
           onSave={salvar}

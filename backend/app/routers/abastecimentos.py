@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth_deps import exigir_admin, UsuarioLogado
 from app.database import get_supabase
+from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.abastecimentos import Abastecimento, AbastecimentoCreate, AbastecimentoUpdate
 
 router = APIRouter(prefix="/abastecimentos", tags=["Abastecimentos"])
@@ -48,9 +49,7 @@ def listar_abastecimentos(
 def criar_abastecimento(abastecimento: AbastecimentoCreate):
     sb = get_supabase()
 
-    maquina = sb.table("maquinas").select("id").eq("id", abastecimento.maquina_id).execute()
-    if not maquina.data:
-        raise HTTPException(status_code=422, detail="Máquina informada não existe")
+    validar_maquina_permite_lancamento(abastecimento.maquina_id)
 
     resp = sb.table("abastecimentos").insert(abastecimento.model_dump(mode="json")).execute()
     criado = sb.table("abastecimentos").select(SELECT_COM_JOIN).eq("id", resp.data[0]["id"]).execute()
@@ -64,6 +63,11 @@ def atualizar_abastecimento(abastecimento_id: int, abastecimento: AbastecimentoU
     dados = abastecimento.model_dump(mode="json", exclude_unset=True)
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
+
+    existente = sb.table("abastecimentos").select("maquina_id").eq("id", abastecimento_id).execute()
+    if not existente.data:
+        raise HTTPException(status_code=404, detail="Abastecimento não encontrado")
+    validar_maquina_permite_lancamento(abastecimento.maquina_id or existente.data[0]["maquina_id"])
 
     resp = sb.table("abastecimentos").update(dados).eq("id", abastecimento_id).execute()
     if not resp.data:

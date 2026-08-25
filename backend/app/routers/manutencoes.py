@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.auth_deps import exigir_admin, UsuarioLogado
 from app.database import get_supabase
+from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.manutencoes import Manutencao, ManutencaoCreate, ManutencaoUpdate
 
 router = APIRouter(prefix="/manutencoes", tags=["Manutenções"])
@@ -55,9 +56,7 @@ def obter_manutencao(manutencao_id: int):
 def criar_manutencao(manutencao: ManutencaoCreate):
     sb = get_supabase()
 
-    maquina = sb.table("maquinas").select("id").eq("id", manutencao.maquina_id).execute()
-    if not maquina.data:
-        raise HTTPException(status_code=422, detail="Máquina informada não existe")
+    validar_maquina_permite_lancamento(manutencao.maquina_id)
 
     resp = (
         sb.table("manutencoes")
@@ -76,6 +75,11 @@ def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate):
     dados = manutencao.model_dump(mode="json", exclude_unset=True)
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
+
+    existente = sb.table("manutencoes").select("maquina_id").eq("id", manutencao_id).execute()
+    if not existente.data:
+        raise HTTPException(status_code=404, detail="Manutenção não encontrada")
+    validar_maquina_permite_lancamento(manutencao.maquina_id or existente.data[0]["maquina_id"])
 
     resp = sb.table("manutencoes").update(dados).eq("id", manutencao_id).execute()
     if not resp.data:

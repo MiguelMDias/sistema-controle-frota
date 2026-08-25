@@ -29,10 +29,14 @@ const BADGE_STATUS_PREVENTIVA = {
 export default function Manutencoes() {
   const [aba, setAba] = useState('manutencoes')
   const [maquinas, setMaquinas] = useState([])
+  const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [fornecedores, setFornecedores] = useState([])
 
   useEffect(() => {
+    // lista completa: usada nos filtros (permite ver histórico de máquinas inativas/baixadas)
     listarMaquinas().then(setMaquinas).catch(() => {})
+    // só máquinas ativas/em manutenção: usada nos formulários de novo lançamento
+    listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     api.get('/fornecedores').then((r) => setFornecedores(r.data)).catch(() => {})
   }, [])
 
@@ -46,9 +50,9 @@ export default function Manutencoes() {
       </div>
 
       {aba === 'manutencoes' ? (
-        <AbaManutencoes maquinas={maquinas} fornecedores={fornecedores} />
+        <AbaManutencoes maquinas={maquinas} maquinasDisponiveis={maquinasDisponiveis} fornecedores={fornecedores} />
       ) : (
-        <AbaPreventivas maquinas={maquinas} fornecedores={fornecedores} />
+        <AbaPreventivas maquinas={maquinas} maquinasDisponiveis={maquinasDisponiveis} fornecedores={fornecedores} />
       )}
     </div>
   )
@@ -69,7 +73,7 @@ function AbaBotao({ label, ativa, onClick }) {
 
 // ==================== ABA MANUTENÇÕES ====================
 
-function AbaManutencoes({ maquinas, fornecedores }) {
+function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores }) {
   const { isAdmin } = useAuth()
   const [manutencoes, setManutencoes] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -162,7 +166,7 @@ function AbaManutencoes({ maquinas, fornecedores }) {
       {modalAberto && (
         <ManutencaoModal
           manutencao={editando}
-          maquinas={maquinas}
+          maquinas={editando ? maquinas : maquinasDisponiveis}
           fornecedores={fornecedores}
           onClose={() => setModalAberto(false)}
           onSave={salvar}
@@ -174,7 +178,7 @@ function AbaManutencoes({ maquinas, fornecedores }) {
 
 // ==================== ABA PREVENTIVAS ====================
 
-function AbaPreventivas({ maquinas, fornecedores }) {
+function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
   const { isAdmin } = useAuth()
   const [preventivas, setPreventivas] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -272,7 +276,7 @@ function AbaPreventivas({ maquinas, fornecedores }) {
 
       {modalAberto && (
         <PreventivaModal
-          maquinas={maquinas}
+          maquinas={maquinasDisponiveis}
           onClose={() => setModalAberto(false)}
           onSave={salvar}
         />

@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Search, Plus, Pencil, Trash2, ImageOff } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, ImageOff, XCircle } from 'lucide-react'
 import {
   listarMaquinas,
   criarMaquina,
   atualizarMaquina,
   excluirMaquina,
+  excluirMaquinaPermanente,
+  listarCentrosDespesa,
   TIPOS_MAQUINA,
   SITUACOES_MAQUINA,
 } from '../services/maquinas'
@@ -13,6 +15,7 @@ import { useAuth } from '../services/auth'
 
 const BADGE_SITUACAO = {
   ativa: 'bg-green-100 text-green-700',
+  inativa: 'bg-gray-100 text-gray-500',
   manutencao: 'bg-orange-100 text-orange-700',
   baixada: 'bg-gray-100 text-gray-600',
 }
@@ -26,6 +29,8 @@ export default function Maquinas() {
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState('')
   const [situacao, setSituacao] = useState('')
+  const [centroDespesaId, setCentroDespesaId] = useState('')
+  const [centrosDespesa, setCentrosDespesa] = useState([])
 
   const [modalAberto, setModalAberto] = useState(false)
   const [maquinaEditando, setMaquinaEditando] = useState(null)
@@ -34,19 +39,23 @@ export default function Maquinas() {
     setCarregando(true)
     setErro(null)
     try {
-      const dados = await listarMaquinas({ busca, tipo, situacao })
+      const dados = await listarMaquinas({ busca, tipo, situacao, centro_despesa_id: centroDespesaId })
       setMaquinas(dados)
     } catch (err) {
       setErro('Não foi possível carregar as máquinas. Verifique se a API está rodando.')
     } finally {
       setCarregando(false)
     }
-  }, [busca, tipo, situacao])
+  }, [busca, tipo, situacao, centroDespesaId])
 
   useEffect(() => {
     const timer = setTimeout(carregar, 300) // debounce da busca
     return () => clearTimeout(timer)
   }, [carregar])
+
+  useEffect(() => {
+    listarCentrosDespesa().then(setCentrosDespesa).catch(() => setCentrosDespesa([]))
+  }, [])
 
   function abrirNovaMaquina() {
     setMaquinaEditando(null)
@@ -69,9 +78,24 @@ export default function Maquinas() {
   }
 
   async function excluir(maquina) {
-    if (!confirm(`Excluir a máquina ${maquina.codigo}? Essa ação não pode ser desfeita.`)) return
+    if (!confirm(`Marcar a máquina ${maquina.codigo} como inativa? O histórico vinculado será preservado.`)) return
     await excluirMaquina(maquina.id)
     carregar()
+  }
+
+  async function excluirPermanente(maquina) {
+    if (
+      !confirm(
+        `Excluir PERMANENTEMENTE a máquina ${maquina.codigo}? Essa ação remove o registro do banco de dados e não pode ser desfeita. Use apenas para dados de teste.`
+      )
+    )
+      return
+    try {
+      await excluirMaquinaPermanente(maquina.id)
+      carregar()
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Não foi possível excluir permanentemente esta máquina.')
+    }
   }
 
   return (
@@ -99,6 +123,12 @@ export default function Maquinas() {
       <div className="flex gap-4 mb-6">
         <FiltroSelect label="Tipo" value={tipo} onChange={setTipo} opcoes={TIPOS_MAQUINA} />
         <FiltroSelect label="Situação" value={situacao} onChange={setSituacao} opcoes={SITUACOES_MAQUINA} />
+        <FiltroSelect
+          label="Centro de Despesa"
+          value={centroDespesaId}
+          onChange={setCentroDespesaId}
+          opcoes={centrosDespesa.map((c) => ({ value: c.id, label: c.nome }))}
+        />
       </div>
 
       {erro && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">{erro}</div>}
@@ -113,7 +143,7 @@ export default function Maquinas() {
               <Th>Tipo</Th>
               <Th>Marca / Modelo</Th>
               <Th>Situação</Th>
-              <Th>Centro de Custo</Th>
+              <Th>Centro de Despesa</Th>
               <Th className="text-right">Ações</Th>
             </tr>
           </thead>
@@ -140,15 +170,22 @@ export default function Maquinas() {
                     {labelSituacao(m.situacao)}
                   </span>
                 </Td>
-                <Td>{m.centro_custo || '—'}</Td>
+                <Td>{centrosDespesa.find((c) => c.id === m.centro_despesa_id)?.nome || '—'}</Td>
                 <Td className="text-right">
-                  <button onClick={() => abrirEdicao(m)} className="text-gray-400 hover:text-primary mr-3">
-                    <Pencil size={16} />
-                  </button>
-                  {isAdmin && (
-                    <button onClick={() => excluir(m)} className="text-gray-400 hover:text-red-600">
-                      <Trash2 size={16} />
-                    </button>
+                  {isAdmin ? (
+                    <>
+                      <button onClick={() => abrirEdicao(m)} className="text-gray-400 hover:text-primary mr-3" title="Editar">
+                        <Pencil size={16} />
+                      </button>
+                      <button onClick={() => excluir(m)} className="text-gray-400 hover:text-red-600 mr-3" title="Marcar como inativa">
+                        <Trash2 size={16} />
+                      </button>
+                      <button onClick={() => excluirPermanente(m)} className="text-gray-300 hover:text-red-700" title="Excluir permanentemente (uso restrito a dados de teste)">
+                        <XCircle size={16} />
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-gray-300 text-xs">Somente admin</span>
                   )}
                 </Td>
               </tr>

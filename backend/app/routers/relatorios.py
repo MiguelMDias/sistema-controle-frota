@@ -128,13 +128,15 @@ def historico_maquina_excel(maquina_id: int):
 
 # ==================== Custos Gerais ====================
 
-def _montar_custos_gerais(data_inicio: Optional[date], data_fim: Optional[date], centro_custo: Optional[str]):
+def _montar_custos_gerais(data_inicio: Optional[date], data_fim: Optional[date], centro_despesa_id: Optional[int]):
     sb = get_supabase()
 
-    maquinas_query = sb.table("maquinas").select("id, codigo, centro_custo")
-    if centro_custo:
-        maquinas_query = maquinas_query.eq("centro_custo", centro_custo)
+    maquinas_query = sb.table("maquinas").select("id, codigo, centro_despesa_id, centros_despesa(nome)")
+    if centro_despesa_id:
+        maquinas_query = maquinas_query.eq("centro_despesa_id", centro_despesa_id)
     maquinas = maquinas_query.execute().data
+    for m in maquinas:
+        m["centro_despesa_nome"] = (m.pop("centros_despesa", None) or {}).get("nome")
     maquinas_por_id = {m["id"]: m for m in maquinas}
     ids_permitidos = set(maquinas_por_id.keys())
 
@@ -155,10 +157,10 @@ def _montar_custos_gerais(data_inicio: Optional[date], data_fim: Optional[date],
     linhas = []
     for m in manutencoes:
         maquina = maquinas_por_id[m["maquina_id"]]
-        linhas.append([maquina["codigo"], maquina["centro_custo"], "Manutenção", m["data"], m["custo"] or 0])
+        linhas.append([maquina["codigo"], maquina["centro_despesa_nome"], "Manutenção", m["data"], m["custo"] or 0])
     for a in abastecimentos:
         maquina = maquinas_por_id[a["maquina_id"]]
-        linhas.append([maquina["codigo"], maquina["centro_custo"], "Combustível", a["data"], a["valor_total"] or 0])
+        linhas.append([maquina["codigo"], maquina["centro_despesa_nome"], "Combustível", a["data"], a["valor_total"] or 0])
 
     linhas.sort(key=lambda linha: linha[3], reverse=True)
     return linhas
@@ -168,14 +170,14 @@ def _montar_custos_gerais(data_inicio: Optional[date], data_fim: Optional[date],
 def custos_gerais_pdf(
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
-    centro_custo: Optional[str] = None,
+    centro_despesa_id: Optional[int] = None,
 ):
-    linhas = _montar_custos_gerais(data_inicio, data_fim, centro_custo)
+    linhas = _montar_custos_gerais(data_inicio, data_fim, centro_despesa_id)
     total = sum(linha[4] for linha in linhas)
     subtitulo = f"Total: R$ {total:,.2f}".replace(",", "@").replace(".", ",").replace("@", ".")
     buffer = gerar_pdf(
         "Custos Gerais",
-        ["Máquina", "Centro de Custo", "Categoria", "Data", "Valor (R$)"],
+        ["Máquina", "Centro de Despesa", "Categoria", "Data", "Valor (R$)"],
         linhas,
         subtitulo=subtitulo,
     )
@@ -186,12 +188,12 @@ def custos_gerais_pdf(
 def custos_gerais_excel(
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
-    centro_custo: Optional[str] = None,
+    centro_despesa_id: Optional[int] = None,
 ):
-    linhas = _montar_custos_gerais(data_inicio, data_fim, centro_custo)
+    linhas = _montar_custos_gerais(data_inicio, data_fim, centro_despesa_id)
     buffer = gerar_excel(
         "Custos Gerais",
-        ["Máquina", "Centro de Custo", "Categoria", "Data", "Valor (R$)"],
+        ["Máquina", "Centro de Despesa", "Categoria", "Data", "Valor (R$)"],
         linhas,
     )
     return resposta_excel(buffer, "custos-gerais.xlsx")

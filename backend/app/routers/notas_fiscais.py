@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth_deps import exigir_admin, UsuarioLogado
 from app.database import get_supabase
+from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.notas_fiscais import NotaFiscal, NotaFiscalCreate, NotaFiscalUpdate
 
 router = APIRouter(prefix="/notas-fiscais", tags=["Notas Fiscais"])
@@ -60,6 +61,9 @@ def listar_notas_fiscais(
 def criar_nota_fiscal(nota: NotaFiscalCreate):
     sb = get_supabase()
 
+    for maquina_id in (nota.maquina_ids or []):
+        validar_maquina_permite_lancamento(maquina_id)
+
     dados = nota.model_dump(mode="json", exclude={"maquina_ids"})
     resp = sb.table("notas_fiscais").insert(dados).execute()
     nota_id = resp.data[0]["id"]
@@ -76,6 +80,10 @@ def criar_nota_fiscal(nota: NotaFiscalCreate):
 def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate):
     sb = get_supabase()
     dados = nota.model_dump(mode="json", exclude_unset=True, exclude={"maquina_ids"})
+
+    if nota.maquina_ids is not None:
+        for maquina_id in nota.maquina_ids:
+            validar_maquina_permite_lancamento(maquina_id)
 
     if dados:
         resp = sb.table("notas_fiscais").update(dados).eq("id", nota_id).execute()

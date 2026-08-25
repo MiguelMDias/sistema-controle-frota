@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from app.auth_deps import exigir_admin, UsuarioLogado
 from app.database import get_supabase
+from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.manutencoes import PlanoPreventiva, PlanoPreventivaCreate, PlanoPreventivaUpdate
 
 router = APIRouter(prefix="/preventivas", tags=["Preventivas"])
@@ -94,6 +95,8 @@ def listar_preventivas(
 def criar_preventiva(plano: PlanoPreventivaCreate):
     sb = get_supabase()
 
+    validar_maquina_permite_lancamento(plano.maquina_id)
+
     maquina_resp = sb.table("maquinas").select("id, codigo, horimetro_atual, km_atual").eq("id", plano.maquina_id).execute()
     if not maquina_resp.data:
         raise HTTPException(status_code=422, detail="Máquina informada não existe")
@@ -157,6 +160,8 @@ def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload):
     if not plano_resp.data:
         raise HTTPException(status_code=404, detail="Plano de preventiva não encontrado")
     plano = plano_resp.data[0]
+
+    validar_maquina_permite_lancamento(plano["maquina_id"])
 
     manutencao = sb.table("manutencoes").insert({
         "maquina_id": plano["maquina_id"],
