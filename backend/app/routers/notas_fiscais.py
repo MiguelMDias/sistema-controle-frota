@@ -5,7 +5,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
-from app.auth_deps import exigir_admin, UsuarioLogado
+from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.notas_fiscais import NotaFiscal, NotaFiscalCreate, NotaFiscalUpdate
@@ -100,7 +101,7 @@ def _validar_referencias(sb, nota) -> None:
 
 
 @router.post("", response_model=NotaFiscal, status_code=201)
-def criar_nota_fiscal(nota: NotaFiscalCreate):
+def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
     _validar_referencias(sb, nota)
@@ -120,14 +121,16 @@ def criar_nota_fiscal(nota: NotaFiscalCreate):
         _substituir_itens(sb, nota_id, nota.itens)
 
     criada = sb.table("notas_fiscais").select(SELECT_COM_JOIN).eq("id", nota_id).execute()
-    return _achatar(criada.data[0])
+    achatada = _achatar(criada.data[0])
+    registrar_log(usuario, "criar", "nota_fiscal", nota_id, f"Nota fiscal {achatada['numero']}/{achatada['serie']} cadastrada")
+    return achatada
 
 
 @router.patch("/{nota_id}", response_model=NotaFiscal)
-def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate):
+def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
-    existente = sb.table("notas_fiscais").select("id").eq("id", nota_id).execute()
+    existente = sb.table("notas_fiscais").select("id, numero, serie").eq("id", nota_id).execute()
     if not existente.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
 
@@ -157,16 +160,21 @@ def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate):
     atualizada = sb.table("notas_fiscais").select(SELECT_COM_JOIN).eq("id", nota_id).execute()
     if not atualizada.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
+    numero_serie = f"{existente.data[0]['numero']}/{existente.data[0]['serie']}"
+    registrar_log(usuario, "atualizar", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} atualizada")
     return _achatar(atualizada.data[0])
 
 
 @router.delete("/{nota_id}", status_code=204)
-def excluir_nota_fiscal(nota_id: int, _: UsuarioLogado = Depends(exigir_admin)):
+def excluir_nota_fiscal(nota_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
+    existente = sb.table("notas_fiscais").select("numero, serie").eq("id", nota_id).execute()
     resp = sb.table("notas_fiscais").delete().eq("id", nota_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
     # notas_fiscais_maquinas e notas_fiscais_itens são apagadas em cascata pela FK ON DELETE CASCADE
+    numero_serie = f"{existente.data[0]['numero']}/{existente.data[0]['serie']}" if existente.data else f"id={nota_id}"
+    registrar_log(usuario, "excluir", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} excluída")
 
 
 # ==================== Importação de XML (NF-e) ====================
@@ -249,7 +257,7 @@ def _extrair_nfe(xml_bytes: bytes) -> dict:
 
 
 @router.post("/importar-xml")
-def importar_xml_nfe(arquivo: UploadFile = File(...)):
+def importar_xml_nfe(arquivo: UploadFile = File(...), usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     """
     Lê um XML de NF-e e devolve os campos já preenchidos (número, série, data,
     valor total, itens e fornecedor) para revisão antes de salvar. Se o
@@ -275,6 +283,7 @@ def importar_xml_nfe(arquivo: UploadFile = File(...)):
             "cnpj": cnpj,
         }).execute()
         fornecedor = novo.data[0]
+        registrar_log(usuario, "criar", "fornecedor", fornecedor["id"], f"Fornecedor {fornecedor['nome']} criado automaticamente via importação de XML de NF-e")
 
     dados["fornecedor_id"] = fornecedor["id"]
     dados["fornecedor_nome"] = fornecedor["nome"]

@@ -2,7 +2,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth_deps import exigir_admin, UsuarioLogado
+from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.checklist import (
@@ -28,19 +29,24 @@ def listar_modelos(tipo_maquina: Optional[str] = None):
 
 
 @router.post("/modelos", response_model=ChecklistModelo, status_code=201)
-def criar_modelo(modelo: ChecklistModeloCreate):
+def criar_modelo(modelo: ChecklistModeloCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
     dados = modelo.model_dump(mode="json")
     resp = sb.table("checklist_modelos").insert(dados).execute()
-    return resp.data[0]
+    novo = resp.data[0]
+    registrar_log(usuario, "criar", "checklist_execucao", novo["id"], f"Modelo de checklist '{novo['nome']}' criado ({novo['tipo_maquina']})")
+    return novo
 
 
 @router.delete("/modelos/{modelo_id}", status_code=204)
-def excluir_modelo(modelo_id: int, _: UsuarioLogado = Depends(exigir_admin)):
+def excluir_modelo(modelo_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
+    existente = sb.table("checklist_modelos").select("nome").eq("id", modelo_id).execute()
     resp = sb.table("checklist_modelos").delete().eq("id", modelo_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Modelo de checklist não encontrado")
+    nome = existente.data[0]["nome"] if existente.data else f"id={modelo_id}"
+    registrar_log(usuario, "excluir", "checklist_execucao", modelo_id, f"Modelo de checklist '{nome}' excluído")
 
 
 # ---------- Execuções ----------
@@ -70,7 +76,7 @@ def listar_execucoes(
 
 
 @router.post("/execucoes", response_model=ChecklistExecucao, status_code=201)
-def registrar_execucao(execucao: ChecklistExecucaoCreate):
+def registrar_execucao(execucao: ChecklistExecucaoCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(execucao.maquina_id)
@@ -82,5 +88,8 @@ def registrar_execucao(execucao: ChecklistExecucaoCreate):
 
     resp = sb.table("checklist_execucoes").insert(dados).execute()
     criada = sb.table("checklist_execucoes").select(SELECT_COM_JOIN).eq("id", resp.data[0]["id"]).execute()
-    return _achatar(criada.data[0])
+    achatada = _achatar(criada.data[0])
+    sufixo = " (com pendências)" if tem_pendencia else ""
+    registrar_log(usuario, "criar", "checklist_execucao", achatada["id"], f"Checklist executado em {achatada['maquina_codigo']}{sufixo}")
+    return achatada
     # horimetro_atual/km_atual são atualizados automaticamente pelo trigger no banco

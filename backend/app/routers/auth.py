@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from app.auth_deps import UsuarioLogado, obter_usuario_atual
 from app.auth_utils import criar_token, hash_senha, verificar_senha
+from app.auditoria import registrar_log
 from app.database import get_supabase
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -81,6 +82,11 @@ def registrar(payload: RegistroPayload):
     }
     resp = sb.table("usuarios").insert(dados).execute()
     criado = resp.data[0]
+
+    registrar_log(
+        UsuarioLogado(id=criado["id"], usuario=criado["usuario"], papel=criado["papel"]),
+        "criar", "usuario", criado["id"], f"Usuário {criado['nome']} ({criado['usuario']}) se auto-cadastrou",
+    )
 
     token = criar_token(criado["id"], criado["usuario"], criado["papel"])
     return LoginResponse(token=token, usuario=criado["usuario"], nome=criado["nome"], papel=criado["papel"])

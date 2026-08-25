@@ -11,6 +11,7 @@ import {
   Users,
   LogOut,
   Wallet,
+  ScrollText,
 } from 'lucide-react'
 import { useAuth } from '../services/auth'
 
@@ -63,19 +64,34 @@ export default function Layout() {
           ))}
 
           {isAdmin && (
-            <NavLink
-              to="/usuarios"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? 'bg-indigo-50 text-primary font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`
-              }
-            >
-              <Users size={18} />
-              Usuários
-            </NavLink>
+            <>
+              <NavLink
+                to="/usuarios"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? 'bg-indigo-50 text-primary font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`
+                }
+              >
+                <Users size={18} />
+                Usuários
+              </NavLink>
+              <NavLink
+                to="/logs"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? 'bg-indigo-50 text-primary font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`
+                }
+              >
+                <ScrollText size={18} />
+                Central de Logs
+              </NavLink>
+            </>
           )}
         </nav>
 

@@ -2,7 +2,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.auth_deps import exigir_admin, UsuarioLogado
+from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.manutencoes import Manutencao, ManutencaoCreate, ManutencaoUpdate
@@ -53,7 +54,7 @@ def obter_manutencao(manutencao_id: int):
 
 
 @router.post("", response_model=Manutencao, status_code=201)
-def criar_manutencao(manutencao: ManutencaoCreate):
+def criar_manutencao(manutencao: ManutencaoCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(manutencao.maquina_id)
@@ -64,13 +65,15 @@ def criar_manutencao(manutencao: ManutencaoCreate):
         .execute()
     )
     criada = sb.table("manutencoes").select(SELECT_COM_JOIN).eq("id", resp.data[0]["id"]).execute()
-    return _achatar(criada.data[0])
+    achatada = _achatar(criada.data[0])
+    registrar_log(usuario, "criar", "manutencao", achatada["id"], f"Manutenção registrada para {achatada['maquina_codigo']} ({achatada['tipo']})")
+    return achatada
     # obs: horimetro_atual/km_atual da máquina são atualizados automaticamente
     # pelo trigger trg_manutencoes_atualiza_leitura no banco
 
 
 @router.patch("/{manutencao_id}", response_model=Manutencao)
-def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate):
+def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
     dados = manutencao.model_dump(mode="json", exclude_unset=True)
     if not dados:
@@ -86,12 +89,17 @@ def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate):
         raise HTTPException(status_code=404, detail="Manutenção não encontrada")
 
     atualizada = sb.table("manutencoes").select(SELECT_COM_JOIN).eq("id", manutencao_id).execute()
-    return _achatar(atualizada.data[0])
+    achatada = _achatar(atualizada.data[0])
+    registrar_log(usuario, "atualizar", "manutencao", manutencao_id, f"Manutenção de {achatada['maquina_codigo']} atualizada")
+    return achatada
 
 
 @router.delete("/{manutencao_id}", status_code=204)
-def excluir_manutencao(manutencao_id: int, _: UsuarioLogado = Depends(exigir_admin)):
+def excluir_manutencao(manutencao_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
+    existente = sb.table("manutencoes").select(SELECT_COM_JOIN).eq("id", manutencao_id).execute()
     resp = sb.table("manutencoes").delete().eq("id", manutencao_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Manutenção não encontrada")
+    maquina_codigo = _achatar(existente.data[0])["maquina_codigo"] if existente.data else "?"
+    registrar_log(usuario, "excluir", "manutencao", manutencao_id, f"Manutenção de {maquina_codigo} excluída")

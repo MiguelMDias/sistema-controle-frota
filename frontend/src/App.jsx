@@ -13,6 +13,7 @@ import NotasFiscais from './pages/NotasFiscais'
 import Checklist from './pages/Checklist'
 import Relatorios from './pages/Relatorios'
 import Financeiro from './pages/Financeiro'
+import CentralDeLogs from './pages/CentralDeLogs'
 import Usuarios from './pages/Usuarios'
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="relatorios" element={<Relatorios />} />
               <Route path="financeiro" element={<Financeiro />} />
               <Route path="usuarios" element={<Usuarios />} />
+              <Route path="logs" element={<CentralDeLogs />} />
             </Route>
           </Route>
         </Routes>

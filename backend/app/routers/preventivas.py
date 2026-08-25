@@ -4,7 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.auth_deps import exigir_admin, UsuarioLogado
+from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
 from app.schemas.manutencoes import PlanoPreventiva, PlanoPreventivaCreate, PlanoPreventivaUpdate
@@ -92,7 +93,7 @@ def listar_preventivas(
 
 
 @router.post("", response_model=PlanoPreventiva, status_code=201)
-def criar_preventiva(plano: PlanoPreventivaCreate):
+def criar_preventiva(plano: PlanoPreventivaCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(plano.maquina_id)
@@ -111,11 +112,13 @@ def criar_preventiva(plano: PlanoPreventivaCreate):
         dados["proximo_km"] = (maquina.get("km_atual") or 0) + plano.intervalo_km
 
     resp = sb.table("planos_preventiva").insert(dados).execute()
-    return _enriquecer(resp.data[0], {maquina["id"]: maquina})
+    criado = resp.data[0]
+    registrar_log(usuario, "criar", "preventiva", criado["id"], f"Plano de preventiva criado para {maquina['codigo']}: {criado['descricao']}")
+    return _enriquecer(criado, {maquina["id"]: maquina})
 
 
 @router.patch("/{plano_id}", response_model=PlanoPreventiva)
-def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate):
+def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
     dados = plano.model_dump(mode="json", exclude_unset=True)
     if not dados:
@@ -127,15 +130,19 @@ def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate):
 
     atualizado = resp.data[0]
     maquina = sb.table("maquinas").select("id, codigo, horimetro_atual, km_atual").eq("id", atualizado["maquina_id"]).execute().data[0]
+    registrar_log(usuario, "atualizar", "preventiva", plano_id, f"Plano de preventiva de {maquina['codigo']} atualizado")
     return _enriquecer(atualizado, {maquina["id"]: maquina})
 
 
 @router.delete("/{plano_id}", status_code=204)
-def excluir_preventiva(plano_id: int, _: UsuarioLogado = Depends(exigir_admin)):
+def excluir_preventiva(plano_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
+    existente = sb.table("planos_preventiva").select("descricao, maquina_id").eq("id", plano_id).execute()
     resp = sb.table("planos_preventiva").delete().eq("id", plano_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Plano de preventiva não encontrado")
+    descricao = existente.data[0]["descricao"] if existente.data else f"id={plano_id}"
+    registrar_log(usuario, "excluir", "preventiva", plano_id, f"Plano de preventiva excluído: {descricao}")
 
 
 class ConcluirPreventivaPayload(BaseModel):
@@ -148,7 +155,7 @@ class ConcluirPreventivaPayload(BaseModel):
 
 
 @router.post("/{plano_id}/concluir", response_model=PlanoPreventiva)
-def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload):
+def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     """
     Registra a execução da preventiva: cria o registro em `manutencoes` (histórico)
     e já recalcula a próxima data/horímetro/km do plano a partir dessa execução.
@@ -185,4 +192,5 @@ def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload):
 
     atualizado = sb.table("planos_preventiva").update(atualizacao).eq("id", plano_id).execute().data[0]
     maquina = sb.table("maquinas").select("id, codigo, horimetro_atual, km_atual").eq("id", plano["maquina_id"]).execute().data[0]
+    registrar_log(usuario, "criar", "manutencao", manutencao["id"], f"Preventiva concluída em {maquina['codigo']}: {payload.descricao}")
     return _enriquecer(atualizado, {maquina["id"]: maquina})
