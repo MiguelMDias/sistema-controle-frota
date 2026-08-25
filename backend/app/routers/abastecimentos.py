@@ -155,7 +155,7 @@ def calcular_consumo(maquina_id: int):
 
     media = sum(diffs) / len(diffs)
     unidade_qtd = registros[-1]["tipo_combustivel"]
-    unidade = f"{'km' if usa_km else 'h'}/{'litro' if unidade_qtd != 'energia_eletrica' else 'kWh'}"
+    unidade = f"{'km' if usa_km else 'h'}/{'litro' if unidade_qtd != 'eletrico' else 'kWh'}"
 
     return {
         "maquina_id": maquina_id,

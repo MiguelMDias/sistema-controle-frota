@@ -6,11 +6,21 @@ const VAZIO = {
   maquina_id: '',
   fornecedor_id: '',
   data: new Date().toISOString().slice(0, 10),
-  tipo_combustivel: 'diesel',
+  tipo_combustivel: 'diesel_s10',
   quantidade: '',
   valor_total: '',
   horimetro: '',
   km: '',
+}
+
+// Combustível que cada tipo de máquina normalmente usa -- preenchido
+// automaticamente ao selecionar a máquina, mas o campo continua editável
+// (ex: um carro pode ser flex/etanol fora do padrão).
+const COMBUSTIVEL_PADRAO_POR_TIPO = {
+  trator: 'diesel_s10',
+  empilhadeira_gas: 'glp',
+  empilhadeira_eletrica: 'eletrico',
+  carro: 'gasolina',
 }
 
 export default function AbastecimentoModal({ abastecimento, maquinas, fornecedores, onClose, onSave }) {
@@ -38,6 +48,16 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
 
   function atualizarCampo(campo, valor) {
     setForm((f) => ({ ...f, [campo]: valor }))
+  }
+
+  function selecionarMaquina(id) {
+    const maquina = maquinas.find((m) => String(m.id) === String(id))
+    const combustivelPadrao = maquina ? COMBUSTIVEL_PADRAO_POR_TIPO[maquina.tipo] : null
+    setForm((f) => ({
+      ...f,
+      maquina_id: id,
+      tipo_combustivel: combustivelPadrao || f.tipo_combustivel,
+    }))
   }
 
   async function handleSubmit(e) {
@@ -82,7 +102,7 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
               <select
                 required
                 value={form.maquina_id}
-                onChange={(e) => atualizarCampo('maquina_id', e.target.value)}
+                onChange={(e) => selecionarMaquina(e.target.value)}
                 className="input"
               >
                 <option value="">Selecione...</option>
@@ -114,6 +134,9 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
+              {maquinaSelecionada && COMBUSTIVEL_PADRAO_POR_TIPO[maquinaSelecionada.tipo] === form.tipo_combustivel && (
+                <span className="block text-xs text-gray-400 mt-1">Preenchido automaticamente para este tipo de máquina</span>
+              )}
             </Campo>
             <Campo label="Fornecedor / Posto">
               <select

@@ -7,9 +7,11 @@ from pydantic import BaseModel
 
 class TipoCombustivel(str, Enum):
     gasolina = "gasolina"
-    diesel = "diesel"
-    gas_glp = "gas_glp"
-    energia_eletrica = "energia_eletrica"
+    etanol = "etanol"
+    diesel_s10 = "diesel_s10"
+    diesel_s500 = "diesel_s500"
+    glp = "glp"
+    eletrico = "eletrico"
 
 
 class AbastecimentoBase(BaseModel):

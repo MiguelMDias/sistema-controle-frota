@@ -2,9 +2,11 @@ import { api } from './api'
 
 export const TIPOS_COMBUSTIVEL = [
   { value: 'gasolina', label: 'Gasolina' },
-  { value: 'diesel', label: 'Diesel' },
-  { value: 'gas_glp', label: 'Gás GLP' },
-  { value: 'energia_eletrica', label: 'Energia Elétrica' },
+  { value: 'etanol', label: 'Etanol' },
+  { value: 'diesel_s10', label: 'Diesel S10' },
+  { value: 'diesel_s500', label: 'Diesel S500' },
+  { value: 'glp', label: 'GLP' },
+  { value: 'eletrico', label: 'Elétrico' },
 ]
 
 export async function listarAbastecimentos(filtros = {}) {
@@ -41,7 +43,7 @@ export function labelTipoCombustivel(valor) {
 }
 
 export function unidadeQuantidade(tipoCombustivel) {
-  if (tipoCombustivel === 'energia_eletrica') return 'kWh'
-  if (tipoCombustivel === 'gas_glp') return 'kg'
+  if (tipoCombustivel === 'eletrico') return 'kWh'
+  if (tipoCombustivel === 'glp') return 'kg'
   return 'litros'
 }

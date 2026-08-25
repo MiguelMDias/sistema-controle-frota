@@ -136,7 +136,7 @@ const logsAuditoriaDemo = [
     id: -3, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'atualizar', entidade: 'abastecimento', entidade_id: -1,
     descricao: 'Abastecimento de DEMO-001 atualizado', created_at: new Date(Date.now() - 7200_000).toISOString(),
     dados_antes: { tipo_combustivel: 'gasolina', quantidade: 38 },
-    dados_depois: { tipo_combustivel: 'diesel', quantidade: 40 },
+    dados_depois: { tipo_combustivel: 'diesel_s10', quantidade: 40 },
   },
 ]
 
