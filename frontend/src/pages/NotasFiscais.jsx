@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react'
-import { listarMaquinas } from '../services/maquinas'
+import { listarMaquinas, listarCentrosDespesa } from '../services/maquinas'
 import { api } from '../services/api'
 import {
   listarNotasFiscais,
@@ -8,9 +8,11 @@ import {
   atualizarNotaFiscal,
   excluirNotaFiscal,
   labelTipoNota,
+  extrairMensagemErro,
   TIPOS_NOTA,
 } from '../services/notasFiscais'
 import NotaFiscalModal from '../components/NotaFiscalModal'
+import NotaFiscalDetalheModal from '../components/NotaFiscalDetalheModal'
 import { useAuth } from '../services/auth'
 
 export default function NotasFiscais() {
@@ -19,7 +21,9 @@ export default function NotasFiscais() {
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [fornecedores, setFornecedores] = useState([])
+  const [centrosDespesa, setCentrosDespesa] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [erroAcao, setErroAcao] = useState(null)
 
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState('')
@@ -29,6 +33,7 @@ export default function NotasFiscais() {
 
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
+  const [visualizando, setVisualizando] = useState(null)
 
   useEffect(() => {
     // lista completa: usada no filtro (permite ver histórico de máquinas inativas/baixadas)
@@ -36,6 +41,7 @@ export default function NotasFiscais() {
     // só ativas/em manutenção: usada no formulário de nova nota fiscal
     listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     api.get('/fornecedores').then((r) => setFornecedores(r.data)).catch(() => {})
+    listarCentrosDespesa().then(setCentrosDespesa).catch(() => {})
   }, [])
 
   const carregar = useCallback(async () => {
@@ -69,8 +75,19 @@ export default function NotasFiscais() {
 
   async function excluir(n) {
     if (!confirm(`Excluir a nota fiscal ${n.numero}?`)) return
-    await excluirNotaFiscal(n.id)
-    carregar()
+    setErroAcao(null)
+    try {
+      await excluirNotaFiscal(n.id)
+      carregar()
+    } catch (err) {
+      setErroAcao(extrairMensagemErro(err, 'Não foi possível excluir esta nota fiscal.'))
+    }
+  }
+
+  function fornecedorCriado(novoFornecedor) {
+    setFornecedores((atual) =>
+      atual.some((f) => f.id === novoFornecedor.id) ? atual : [...atual, novoFornecedor]
+    )
   }
 
   const total = notas.reduce((soma, n) => soma + (n.valor_total || 0), 0)
@@ -113,6 +130,8 @@ export default function NotasFiscais() {
         </label>
       </div>
 
+      {erroAcao && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">{erroAcao}</div>}
+
       {!carregando && (
         <p className="text-sm text-gray-500 mb-3">
           Total no filtro atual: {notas.length} nota(s) — {formatarMoeda(total)}
@@ -124,28 +143,41 @@ export default function NotasFiscais() {
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
               <Th>Número / Série</Th><Th>Data Emissão</Th><Th>Fornecedor</Th>
-              <Th>Tipo</Th><Th>Valor Total</Th><Th>Máquinas</Th><Th className="text-right">Ações</Th>
+              <Th>Tipo</Th><Th>Valor Total</Th><Th>Centro de Despesa</Th><Th>Máquinas</Th><Th className="text-right">Ações</Th>
             </tr>
           </thead>
           <tbody>
-            {carregando && <tr><td colSpan={7} className="text-center py-8 text-gray-400">Carregando...</td></tr>}
+            {carregando && <tr><td colSpan={8} className="text-center py-8 text-gray-400">Carregando...</td></tr>}
             {!carregando && notas.length === 0 && (
-              <tr><td colSpan={7} className="text-center py-8 text-gray-400">Nenhuma nota fiscal encontrada.</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-gray-400">Nenhuma nota fiscal encontrada.</td></tr>
             )}
             {!carregando && notas.map((n) => (
-              <tr key={n.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
+              <tr
+                key={n.id}
+                onClick={() => setVisualizando(n)}
+                className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 cursor-pointer"
+              >
                 <Td className="font-medium text-gray-700">{n.numero} / {n.serie}</Td>
                 <Td>{formatarData(n.data_emissao)}</Td>
                 <Td>{n.fornecedor_nome || '—'}</Td>
                 <Td>{labelTipoNota(n.tipo)}</Td>
                 <Td>{formatarMoeda(n.valor_total)}</Td>
+                <Td>{centrosDespesa.find((c) => c.id === n.centro_despesa_id)?.nome || '—'}</Td>
                 <Td>{n.maquinas.length > 0 ? n.maquinas.join(', ') : '—'}</Td>
                 <Td className="text-right">
-                  <button onClick={() => { setEditando(n); setModalAberto(true) }} className="text-gray-400 hover:text-primary mr-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditando(n); setModalAberto(true) }}
+                    className="text-gray-400 hover:text-primary mr-3"
+                    title="Editar"
+                  >
                     <Pencil size={16} />
                   </button>
                   {isAdmin && (
-                    <button onClick={() => excluir(n)} className="text-gray-400 hover:text-red-600">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); excluir(n) }}
+                      className="text-gray-400 hover:text-red-600"
+                      title="Excluir"
+                    >
                       <Trash2 size={16} />
                     </button>
                   )}
@@ -161,8 +193,23 @@ export default function NotasFiscais() {
           nota={editando}
           maquinas={editando ? maquinas : maquinasDisponiveis}
           fornecedores={fornecedores}
+          centrosDespesa={centrosDespesa}
           onClose={() => setModalAberto(false)}
           onSave={salvar}
+          onFornecedorCriado={fornecedorCriado}
+        />
+      )}
+
+      {visualizando && !modalAberto && (
+        <NotaFiscalDetalheModal
+          nota={visualizando}
+          centrosDespesa={centrosDespesa}
+          onClose={() => setVisualizando(null)}
+          onEditar={() => {
+            setEditando(visualizando)
+            setVisualizando(null)
+            setModalAberto(true)
+          }}
         />
       )}
     </div>

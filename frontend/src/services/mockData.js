@@ -26,7 +26,7 @@ const abastecimentosDemo = [
 ]
 
 const notasFiscaisDemo = [
-  { id: -1, numero: '000001', serie: '1', fornecedor_id: -1, data_emissao: new Date().toISOString().slice(0, 10), tipo: 'peca', valor_total: 320.5, observacoes: 'Nota de exemplo', fornecedor_nome: 'Oficina Exemplo Ltda', maquinas: ['DEMO-002'], created_at: new Date().toISOString() },
+  { id: -1, numero: '000001', serie: '1', fornecedor_id: -1, centro_despesa_id: null, data_emissao: new Date().toISOString().slice(0, 10), tipo: 'peca', valor_total: 320.5, observacoes: 'Nota de exemplo', fornecedor_nome: 'Oficina Exemplo Ltda', maquinas: ['DEMO-002'], itens: [{ id: -1, nome: 'Óleo de motor 15W40', quantidade: 4, valor_unitario: 80.125 }], created_at: new Date().toISOString() },
 ]
 
 const checklistModelosDemo = [
@@ -60,6 +60,11 @@ const dashboardCustosPorCategoriaDemo = [
   { categoria: 'Combustível', total: 260 },
 ]
 
+const centrosDespesaDemo = [
+  { id: -1, nome: 'Logística (exemplo)', ativo: true },
+  { id: -2, nome: 'Manutenção (exemplo)', ativo: true },
+]
+
 // Mapeia padrões de rota (regex) para a resposta simulada.
 // Ordem importa: padrões mais específicos primeiro.
 const ROTAS_MOCK = [
@@ -67,6 +72,7 @@ const ROTAS_MOCK = [
   { padrao: /^\/dashboard\/custos-por-mes/, dados: () => dashboardCustosPorMesDemo },
   { padrao: /^\/dashboard\/custos-por-categoria/, dados: () => dashboardCustosPorCategoriaDemo },
   { padrao: /^\/abastecimentos\/consumo\//, dados: () => ({ maquina_id: -1, maquina_codigo: 'DEMO-001', consumo_medio: 11.4, unidade: 'km/litro' }) },
+  { padrao: /^\/maquinas\/centros-despesa\/listar/, dados: () => centrosDespesaDemo },
   { padrao: /^\/maquinas/, dados: () => maquinasDemo },
   { padrao: /^\/fornecedores/, dados: () => fornecedoresDemo },
   { padrao: /^\/manutencoes/, dados: () => manutencoesDemo },
