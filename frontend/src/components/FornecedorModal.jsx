@@ -3,6 +3,11 @@ import { X } from 'lucide-react'
 
 const VAZIO = { nome: '', cnpj: '', telefone: '', email: '', contato: '' }
 
+// Remove tudo que não for dígito
+function apenasDigitos(valor) {
+  return valor.replace(/\D/g, '')
+}
+
 export default function FornecedorModal({ fornecedor, onClose, onSave }) {
   const [form, setForm] = useState(VAZIO)
   const [erro, setErro] = useState(null)
@@ -19,11 +24,16 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setErro(null)
+
+    if (form.cnpj.length !== 14) {
+      setErro('CNPJ deve ter exatamente 14 dígitos')
+      return
+    }
+
     setSalvando(true)
     try {
       await onSave({
         ...form,
-        cnpj: form.cnpj || null,
         telefone: form.telefone || null,
         email: form.email || null,
         contato: form.contato || null,
@@ -55,15 +65,19 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
               required
               value={form.nome}
               onChange={(e) => atualizarCampo('nome', e.target.value)}
+              maxLength={200}
               className="input"
             />
           </Campo>
 
-          <Campo label="CNPJ">
+          <Campo label="CNPJ *">
             <input
+              required
               value={form.cnpj}
-              onChange={(e) => atualizarCampo('cnpj', e.target.value)}
-              placeholder="00000000000000"
+              onChange={(e) => atualizarCampo('cnpj', apenasDigitos(e.target.value))}
+              maxLength={14}
+              inputMode="numeric"
+              placeholder="00000000000000 (só números)"
               className="input"
             />
           </Campo>
@@ -72,7 +86,10 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
             <Campo label="Telefone">
               <input
                 value={form.telefone}
-                onChange={(e) => atualizarCampo('telefone', e.target.value)}
+                onChange={(e) => atualizarCampo('telefone', apenasDigitos(e.target.value))}
+                maxLength={13}
+                inputMode="numeric"
+                placeholder="DDD + número"
                 className="input"
               />
             </Campo>
@@ -81,6 +98,7 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
                 type="email"
                 value={form.email}
                 onChange={(e) => atualizarCampo('email', e.target.value)}
+                maxLength={50}
                 className="input"
               />
             </Campo>

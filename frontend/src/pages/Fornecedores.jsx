@@ -104,8 +104,8 @@ export default function Fornecedores() {
             {!carregando && fornecedores.map((f) => (
               <tr key={f.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
                 <td className="px-4 py-3 font-medium text-gray-700">{f.nome}</td>
-                <td className="px-4 py-3">{f.cnpj || '—'}</td>
-                <td className="px-4 py-3">{f.telefone || '—'}</td>
+                <td className="px-4 py-3">{formatarCnpj(f.cnpj)}</td>
+                <td className="px-4 py-3">{formatarTelefone(f.telefone)}</td>
                 <td className="px-4 py-3">{f.email || '—'}</td>
                 <td className="px-4 py-3">{f.contato || '—'}</td>
                 <td className="px-4 py-3 text-right">
@@ -133,4 +133,18 @@ export default function Fornecedores() {
       )}
     </div>
   )
+}
+
+function formatarCnpj(cnpj) {
+  if (!cnpj) return '—'
+  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+}
+
+function formatarTelefone(telefone) {
+  if (!telefone) return '—'
+  // 13 dígitos = 55 + DDD + 9 dígitos (celular c/ código do país); 10-11 = DDD + número local
+  if (telefone.length === 13) return telefone.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4')
+  if (telefone.length === 11) return telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  if (telefone.length === 10) return telefone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+  return telefone
 }

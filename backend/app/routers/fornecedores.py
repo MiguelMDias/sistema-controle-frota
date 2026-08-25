@@ -22,6 +22,9 @@ def listar_fornecedores(busca: Optional[str] = Query(None, description="Busca po
 @router.post("", response_model=Fornecedor, status_code=201)
 def criar_fornecedor(fornecedor: FornecedorCreate):
     sb = get_supabase()
+    existe = sb.table("fornecedores").select("id").eq("cnpj", fornecedor.cnpj).execute()
+    if existe.data:
+        raise HTTPException(status_code=409, detail=f"Já existe um fornecedor com o CNPJ {fornecedor.cnpj}")
     resp = sb.table("fornecedores").insert(fornecedor.model_dump(mode="json")).execute()
     return resp.data[0]
 

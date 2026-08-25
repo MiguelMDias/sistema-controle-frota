@@ -3,14 +3,14 @@
 // localmente, então o "observador" nunca tem acesso ao banco de dados real.
 
 const maquinasDemo = [
-  { id: -1, codigo: 'DEMO-001', numero_patrimonial: 'ABC-1D23', tipo: 'carro', marca: 'Fiat', modelo: 'Strada', ano: 2022, situacao: 'ativa', centro_custo: 'Logística', responsavel: 'Colaborador Exemplo', horimetro_atual: 0, km_atual: 18500, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: -2, codigo: 'DEMO-002', numero_patrimonial: '02', tipo: 'empilhadeira_eletrica', marca: 'Still', modelo: 'CLX 25', ano: 2020, situacao: 'ativa', centro_custo: 'Logística', responsavel: null, horimetro_atual: 1240, km_atual: 0, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: -3, codigo: 'DEMO-003', numero_patrimonial: 'MAQ-0003', tipo: 'trator', marca: 'New Holland', modelo: 'TL75E', ano: 2018, situacao: 'manutencao', centro_custo: 'Geral', responsavel: null, horimetro_atual: 3320, km_atual: 0, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: -1, codigo: 'DEMO-001', numero_patrimonial: 'ABC-1D23', tipo: 'carro', marca: 'Fiat', modelo: 'Strada', ano: 2022, situacao: 'ativa', centro_despesa_id: null, responsavel: 'Colaborador Exemplo', horimetro_atual: 0, km_atual: 18500, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: -2, codigo: 'DEMO-002', numero_patrimonial: '02', tipo: 'empilhadeira_eletrica', marca: 'Still', modelo: 'CLX 25', ano: 2020, situacao: 'ativa', centro_despesa_id: null, responsavel: null, horimetro_atual: 1240, km_atual: 0, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: -3, codigo: 'DEMO-003', numero_patrimonial: 'MAQ-0003', tipo: 'trator', marca: 'New Holland', modelo: 'TL75E', ano: 2018, situacao: 'manutencao', centro_despesa_id: null, responsavel: null, horimetro_atual: 3320, km_atual: 0, foto_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ]
 
 const fornecedoresDemo = [
-  { id: -1, nome: 'Oficina Exemplo Ltda', cnpj: '00000000000100', telefone: '(00) 0000-0000', email: 'contato@exemplo.com', contato: 'Fulano de Tal', created_at: new Date().toISOString() },
-  { id: -2, nome: 'Posto Demonstração', cnpj: '00000000000200', telefone: '(00) 0000-0001', email: null, contato: null, created_at: new Date().toISOString() },
+  { id: -1, nome: 'Oficina Exemplo Ltda', cnpj: '00000000000100', telefone: '1100000000', email: 'contato@exemplo.com', contato: 'Fulano de Tal', created_at: new Date().toISOString() },
+  { id: -2, nome: 'Posto Demonstração', cnpj: '00000000000200', telefone: '1100000001', email: null, contato: null, created_at: new Date().toISOString() },
 ]
 
 const manutencoesDemo = [
