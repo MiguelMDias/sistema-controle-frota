@@ -50,8 +50,10 @@ export async function excluirMaquinaPermanente(id) {
   await api.delete(`/maquinas/${id}/permanente`)
 }
 
-export async function listarCentrosDespesa() {
-  const { data } = await api.get('/maquinas/centros-despesa/listar')
+export async function listarCentrosDespesa(incluirInativos = false) {
+  const { data } = await api.get('/maquinas/centros-despesa/listar', {
+    params: incluirInativos ? { incluir_inativos: true } : {},
+  })
   return data
 }
 

@@ -65,6 +65,39 @@ const centrosDespesaDemo = [
   { id: -2, nome: 'Manutenção (exemplo)', ativo: true },
 ]
 
+const financeiroVisaoGeralDemo = {
+  manutencao: 320.5,
+  abastecimento: 260,
+  nota_fiscal: 320.5,
+  total: 901,
+  num_maquinas_ativas: 2,
+  custo_medio_por_maquina: 450.5,
+}
+
+const financeiroCustoPorMaquinaDemo = [
+  { maquina_id: -2, codigo: 'DEMO-002', tipo: 'empilhadeira_eletrica', centro_despesa_nome: null, manutencao: 320.5, abastecimento: 0, nota_fiscal: 320.5, total: 641 },
+  { maquina_id: -1, codigo: 'DEMO-001', tipo: 'carro', centro_despesa_nome: null, manutencao: 0, abastecimento: 260, nota_fiscal: 0, total: 260 },
+]
+
+const financeiroCustoPorMesDemo = Array.from({ length: 12 }, (_, i) => ({
+  mes: i + 1,
+  manutencao: i === 7 ? 320.5 : 0,
+  abastecimento: i === 7 ? 260 : 0,
+  nota_fiscal: i === 7 ? 320.5 : 0,
+  total: i === 7 ? 901 : 0,
+}))
+
+const financeiroComparacaoPeriodosDemo = {
+  periodo_a: { manutencao: 320.5, abastecimento: 260, nota_fiscal: 320.5, total: 901 },
+  periodo_b: { manutencao: 120, abastecimento: 90, nota_fiscal: 0, total: 210 },
+  variacao_percentual: 329.05,
+}
+
+const financeiroComparacaoCentrosDemo = [
+  { centro_despesa_id: -1, nome: 'Logística (exemplo)', manutencao: 0, abastecimento: 260, nota_fiscal: 0, total: 260 },
+  { centro_despesa_id: null, nome: '(Sem centro de despesa)', manutencao: 320.5, abastecimento: 0, nota_fiscal: 320.5, total: 641 },
+]
+
 // Mapeia padrões de rota (regex) para a resposta simulada.
 // Ordem importa: padrões mais específicos primeiro.
 const ROTAS_MOCK = [
@@ -72,6 +105,11 @@ const ROTAS_MOCK = [
   { padrao: /^\/dashboard\/custos-por-mes/, dados: () => dashboardCustosPorMesDemo },
   { padrao: /^\/dashboard\/custos-por-categoria/, dados: () => dashboardCustosPorCategoriaDemo },
   { padrao: /^\/abastecimentos\/consumo\//, dados: () => ({ maquina_id: -1, maquina_codigo: 'DEMO-001', consumo_medio: 11.4, unidade: 'km/litro' }) },
+  { padrao: /^\/financeiro\/visao-geral/, dados: () => financeiroVisaoGeralDemo },
+  { padrao: /^\/financeiro\/custo-por-maquina/, dados: () => financeiroCustoPorMaquinaDemo },
+  { padrao: /^\/financeiro\/custo-por-mes/, dados: () => financeiroCustoPorMesDemo },
+  { padrao: /^\/financeiro\/comparacao-periodos/, dados: () => financeiroComparacaoPeriodosDemo },
+  { padrao: /^\/financeiro\/comparacao-centros/, dados: () => financeiroComparacaoCentrosDemo },
   { padrao: /^\/maquinas\/centros-despesa\/listar/, dados: () => centrosDespesaDemo },
   { padrao: /^\/maquinas/, dados: () => maquinasDemo },
   { padrao: /^\/fornecedores/, dados: () => fornecedoresDemo },

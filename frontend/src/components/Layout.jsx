@@ -11,6 +11,7 @@ import {
   Upload,
   Users,
   LogOut,
+  Wallet,
 } from 'lucide-react'
 import { useAuth } from '../services/auth'
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/fornecedores', label: 'Fornecedores', icon: Briefcase },
   { to: '/notas-fiscais', label: 'Notas Fiscais', icon: FileText },
   { to: '/checklist', label: 'Checklist', icon: CheckSquare },
+  { to: '/financeiro', label: 'Financeiro', icon: Wallet },
   { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { to: '/importacao', label: 'Importação', icon: Upload },
 ]

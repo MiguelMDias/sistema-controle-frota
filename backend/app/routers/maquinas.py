@@ -144,15 +144,12 @@ def excluir_maquina_permanente(maquina_id: int, _: UsuarioLogado = Depends(exigi
 
 
 @router.get("/centros-despesa/listar", response_model=list[CentroDespesa])
-def listar_centros_despesa():
+def listar_centros_despesa(incluir_inativos: bool = False):
     sb = get_supabase()
-    resp = (
-        sb.table("centros_despesa")
-        .select("*")
-        .eq("ativo", True)
-        .order("nome")
-        .execute()
-    )
+    query = sb.table("centros_despesa").select("*")
+    if not incluir_inativos:
+        query = query.eq("ativo", True)
+    resp = query.order("nome").execute()
     return resp.data
 
 
@@ -163,4 +160,27 @@ def criar_centro_despesa(centro: CentroDespesaCreate, _: UsuarioLogado = Depends
     if existe.data:
         raise HTTPException(status_code=409, detail=f"Já existe um centro de despesa '{centro.nome}'")
     resp = sb.table("centros_despesa").insert(centro.model_dump()).execute()
+    return resp.data[0]
+
+
+@router.patch("/centros-despesa/{centro_id}", response_model=CentroDespesa)
+def atualizar_centro_despesa(centro_id: int, centro: CentroDespesaCreate, _: UsuarioLogado = Depends(exigir_admin)):
+    sb = get_supabase()
+    existe = sb.table("centros_despesa").select("id").eq("id", centro_id).execute()
+    if not existe.data:
+        raise HTTPException(status_code=404, detail="Centro de despesa não encontrado")
+    duplicado = sb.table("centros_despesa").select("id").eq("nome", centro.nome).neq("id", centro_id).execute()
+    if duplicado.data:
+        raise HTTPException(status_code=409, detail=f"Já existe um centro de despesa '{centro.nome}'")
+    resp = sb.table("centros_despesa").update({"nome": centro.nome}).eq("id", centro_id).execute()
+    return resp.data[0]
+
+
+@router.patch("/centros-despesa/{centro_id}/situacao", response_model=CentroDespesa)
+def alternar_situacao_centro_despesa(centro_id: int, ativo: bool, _: UsuarioLogado = Depends(exigir_admin)):
+    """Ativa ou desativa um centro de despesa (soft delete -- preserva o histórico de custos já lançados)."""
+    sb = get_supabase()
+    resp = sb.table("centros_despesa").update({"ativo": ativo}).eq("id", centro_id).execute()
+    if not resp.data:
+        raise HTTPException(status_code=404, detail="Centro de despesa não encontrado")
     return resp.data[0]

@@ -17,6 +17,7 @@ from app.routers import (
     checklist,
     dashboard,
     relatorios,
+    financeiro,
 )
 
 load_dotenv()
@@ -55,6 +56,7 @@ app.include_router(notas_fiscais.router, dependencies=_protegido)
 app.include_router(checklist.router, dependencies=_protegido)
 app.include_router(dashboard.router, dependencies=_protegido)
 app.include_router(relatorios.router, dependencies=_protegido)
+app.include_router(financeiro.router, dependencies=_protegido)
 
 
 @app.get("/")
