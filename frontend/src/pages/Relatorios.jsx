@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react'
 import { FileDown, FileSpreadsheet } from 'lucide-react'
-import { listarMaquinas } from '../services/maquinas'
+import { listarMaquinas, listarCentrosDespesa } from '../services/maquinas'
 import { api } from '../services/api'
 
 export default function Relatorios() {
   const [maquinas, setMaquinas] = useState([])
-  const [centrosCusto, setCentrosCusto] = useState([])
+  const [centrosDespesa, setCentrosDespesa] = useState([])
 
   useEffect(() => {
-    listarMaquinas().then((dados) => {
-      setMaquinas(dados)
-      const centros = [...new Set(dados.map((m) => m.centro_custo).filter(Boolean))]
-      setCentrosCusto(centros)
-    }).catch(() => {})
+    listarMaquinas().then(setMaquinas).catch(() => {})
+    listarCentrosDespesa().then(setCentrosDespesa).catch(() => {})
   }, [])
 
   return (
@@ -24,7 +21,7 @@ export default function Relatorios() {
 
       <div className="space-y-6 max-w-2xl">
         <RelatorioHistoricoMaquina maquinas={maquinas} />
-        <RelatorioCustosGerais centrosCusto={centrosCusto} />
+        <RelatorioCustosGerais centrosDespesa={centrosDespesa} />
         <RelatorioPreventivas />
       </div>
     </div>
@@ -98,21 +95,21 @@ function RelatorioHistoricoMaquina({ maquinas }) {
   )
 }
 
-function RelatorioCustosGerais({ centrosCusto }) {
+function RelatorioCustosGerais({ centrosDespesa }) {
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
-  const [centroCusto, setCentroCusto] = useState('')
+  const [centroDespesaId, setCentroDespesaId] = useState('')
 
   const params = {
     data_inicio: dataInicio || undefined,
     data_fim: dataFim || undefined,
-    centro_custo: centroCusto || undefined,
+    centro_despesa_id: centroDespesaId || undefined,
   }
 
   return (
     <CardRelatorio
       titulo="Custos Gerais"
-      descricao="Custos de manutenção e combustível agrupados por centro de custo, no período informado."
+      descricao="Custos de manutenção e combustível agrupados por centro de despesa, no período informado."
     >
       <div className="flex flex-wrap gap-3 mb-4">
         <label className="flex flex-col gap-1">
@@ -126,12 +123,12 @@ function RelatorioCustosGerais({ centrosCusto }) {
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500">Centro de Custo</span>
-          <select value={centroCusto} onChange={(e) => setCentroCusto(e.target.value)}
+          <span className="text-xs text-gray-500">Centro de Despesa</span>
+          <select value={centroDespesaId} onChange={(e) => setCentroDespesaId(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white min-w-[150px]">
             <option value="">Todos</option>
-            {centrosCusto.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {centrosDespesa.map((c) => (
+              <option key={c.id} value={c.id}>{c.nome}</option>
             ))}
           </select>
         </label>

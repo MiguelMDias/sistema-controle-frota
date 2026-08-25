@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { TIPOS_MAQUINA, SITUACOES_MAQUINA } from '../services/maquinas'
+import {
+  TIPOS_MAQUINA,
+  SITUACOES_MAQUINA,
+  ANO_MINIMO,
+  ANO_MAXIMO,
+  listarCentrosDespesa,
+} from '../services/maquinas'
 
 const VAZIO = {
   codigo: '',
   numero_patrimonial: '',
+  numero_serie: '',
   tipo: 'carro',
   marca: '',
   modelo: '',
   ano: '',
   situacao: 'ativa',
-  centro_custo: '',
+  centro_despesa_id: '',
   responsavel: '',
 }
 
@@ -18,10 +25,15 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
   const [form, setForm] = useState(VAZIO)
   const [erro, setErro] = useState(null)
   const [salvando, setSalvando] = useState(false)
+  const [centrosDespesa, setCentrosDespesa] = useState([])
+
+  useEffect(() => {
+    listarCentrosDespesa().then(setCentrosDespesa).catch(() => setCentrosDespesa([]))
+  }, [])
 
   useEffect(() => {
     if (maquina) {
-      setForm({ ...VAZIO, ...maquina, ano: maquina.ano ?? '' })
+      setForm({ ...VAZIO, ...maquina, ano: maquina.ano ?? '', centro_despesa_id: maquina.centro_despesa_id ?? '' })
     } else {
       setForm(VAZIO)
     }
@@ -34,15 +46,22 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setErro(null)
+
+    if (form.ano && (Number(form.ano) < ANO_MINIMO || Number(form.ano) > ANO_MAXIMO)) {
+      setErro(`Ano deve estar entre ${ANO_MINIMO} e ${ANO_MAXIMO}`)
+      return
+    }
+
     setSalvando(true)
     try {
       const payload = {
         ...form,
         ano: form.ano ? Number(form.ano) : null,
         numero_patrimonial: form.numero_patrimonial || null,
+        numero_serie: form.numero_serie || null,
         marca: form.marca || null,
         modelo: form.modelo || null,
-        centro_custo: form.centro_custo || null,
+        centro_despesa_id: form.centro_despesa_id ? Number(form.centro_despesa_id) : null,
         responsavel: form.responsavel || null,
       }
       await onSave(payload)
@@ -84,6 +103,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
               <input
                 value={form.numero_patrimonial}
                 onChange={(e) => atualizarCampo('numero_patrimonial', e.target.value)}
+                maxLength={30}
                 className="input"
               />
             </Campo>
@@ -121,6 +141,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
               <input
                 value={form.marca}
                 onChange={(e) => atualizarCampo('marca', e.target.value)}
+                maxLength={20}
                 className="input"
               />
             </Campo>
@@ -128,6 +149,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
               <input
                 value={form.modelo}
                 onChange={(e) => atualizarCampo('modelo', e.target.value)}
+                maxLength={20}
                 className="input"
               />
             </Campo>
@@ -139,18 +161,35 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
                 type="number"
                 value={form.ano}
                 onChange={(e) => atualizarCampo('ano', e.target.value)}
+                min={ANO_MINIMO}
+                max={ANO_MAXIMO}
+                placeholder={`${ANO_MINIMO} - ${ANO_MAXIMO}`}
                 className="input"
               />
             </Campo>
-            <Campo label="Centro de Custo">
+            <Campo label="Nº de Série">
               <input
-                value={form.centro_custo}
-                onChange={(e) => atualizarCampo('centro_custo', e.target.value)}
-                placeholder="Logística, Mecânico, Geral..."
+                value={form.numero_serie}
+                onChange={(e) => atualizarCampo('numero_serie', e.target.value)}
+                maxLength={30}
+                placeholder="Nº de série do fabricante"
                 className="input"
               />
             </Campo>
           </div>
+
+          <Campo label="Centro de Despesa">
+            <select
+              value={form.centro_despesa_id}
+              onChange={(e) => atualizarCampo('centro_despesa_id', e.target.value)}
+              className="input"
+            >
+              <option value="">Selecione...</option>
+              {centrosDespesa.map((c) => (
+                <option key={c.id} value={c.id}>{c.nome}</option>
+              ))}
+            </select>
+          </Campo>
 
           <Campo label="Responsável">
             <input

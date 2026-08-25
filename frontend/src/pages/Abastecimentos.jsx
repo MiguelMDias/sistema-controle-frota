@@ -19,6 +19,7 @@ export default function Abastecimentos() {
   const { isAdmin } = useAuth()
   const [abastecimentos, setAbastecimentos] = useState([])
   const [maquinas, setMaquinas] = useState([])
+  const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [fornecedores, setFornecedores] = useState([])
   const [carregando, setCarregando] = useState(true)
 
@@ -32,7 +33,10 @@ export default function Abastecimentos() {
   const [consumo, setConsumo] = useState(null)
 
   useEffect(() => {
+    // lista completa: usada nos filtros (permite ver histórico de máquinas inativas/baixadas)
     listarMaquinas().then(setMaquinas).catch(() => {})
+    // só máquinas ativas/em manutenção: usada no formulário de novo lançamento
+    listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     api.get('/fornecedores').then((r) => setFornecedores(r.data)).catch(() => {})
   }, [])
 
@@ -166,7 +170,7 @@ export default function Abastecimentos() {
       {modalAberto && (
         <AbastecimentoModal
           abastecimento={editando}
-          maquinas={maquinas}
+          maquinas={editando ? maquinas : maquinasDisponiveis}
           fornecedores={fornecedores}
           onClose={() => setModalAberto(false)}
           onSave={salvar}

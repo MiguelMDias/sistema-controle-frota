@@ -7,6 +7,7 @@ import ExecutarChecklistModal from '../components/ExecutarChecklistModal'
 
 export default function Checklist() {
   const [maquinas, setMaquinas] = useState([])
+  const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [modelos, setModelos] = useState([])
   const [execucoes, setExecucoes] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -18,7 +19,10 @@ export default function Checklist() {
   const [executando, setExecutando] = useState(null) // { maquina, modelo }
 
   useEffect(() => {
+    // lista completa: usada no filtro (permite ver histórico de máquinas inativas/baixadas)
     listarMaquinas().then(setMaquinas).catch(() => {})
+    // só ativas/em manutenção: são as únicas que podem executar um novo checklist
+    listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     listarModelos().then(setModelos).catch(() => {})
   }, [])
 
@@ -70,7 +74,7 @@ export default function Checklist() {
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
         <h3 className="font-medium text-gray-700 mb-3">Executar checklist agora</h3>
         <div className="flex flex-wrap gap-2">
-          {maquinas.map((m) => (
+          {maquinasDisponiveis.map((m) => (
             <button
               key={m.id}
               onClick={() => iniciarExecucao(m)}
@@ -80,7 +84,7 @@ export default function Checklist() {
               {m.codigo}
             </button>
           ))}
-          {maquinas.length === 0 && <p className="text-sm text-gray-400">Cadastre máquinas primeiro.</p>}
+          {maquinasDisponiveis.length === 0 && <p className="text-sm text-gray-400">Nenhuma máquina disponível para checklist no momento.</p>}
         </div>
       </div>
 
