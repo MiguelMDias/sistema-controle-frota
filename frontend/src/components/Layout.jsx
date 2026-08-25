@@ -8,7 +8,6 @@ import {
   FileText,
   CheckSquare,
   BarChart3,
-  Upload,
   Users,
   LogOut,
   Wallet,
@@ -25,7 +24,6 @@ const NAV_ITEMS = [
   { to: '/checklist', label: 'Checklist', icon: CheckSquare },
   { to: '/financeiro', label: 'Financeiro', icon: Wallet },
   { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
-  { to: '/importacao', label: 'Importação', icon: Upload },
 ]
 
 export default function Layout() {

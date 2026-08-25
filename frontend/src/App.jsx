@@ -14,7 +14,6 @@ import Checklist from './pages/Checklist'
 import Relatorios from './pages/Relatorios'
 import Financeiro from './pages/Financeiro'
 import Usuarios from './pages/Usuarios'
-import EmBreve from './pages/EmBreve'
 
 export default function App() {
   return (
@@ -36,7 +35,6 @@ export default function App() {
               <Route path="relatorios" element={<Relatorios />} />
               <Route path="financeiro" element={<Financeiro />} />
               <Route path="usuarios" element={<Usuarios />} />
-              <Route path="importacao" element={<EmBreve titulo="Importação" />} />
             </Route>
           </Route>
         </Routes>
