@@ -28,7 +28,7 @@ def criar_fornecedor(fornecedor: FornecedorCreate, usuario: UsuarioLogado = Depe
         raise HTTPException(status_code=409, detail=f"Já existe um fornecedor com o CNPJ {fornecedor.cnpj}")
     resp = sb.table("fornecedores").insert(fornecedor.model_dump(mode="json")).execute()
     novo = resp.data[0]
-    registrar_log(usuario, "criar", "fornecedor", novo["id"], f"Fornecedor {novo['nome']} cadastrado")
+    registrar_log(usuario, "criar", "fornecedor", novo["id"], f"Fornecedor {novo['nome']} cadastrado", dados_depois=novo)
     return novo
 
 
@@ -38,20 +38,22 @@ def atualizar_fornecedor(fornecedor_id: int, fornecedor: FornecedorUpdate, usuar
     dados = fornecedor.model_dump(mode="json", exclude_unset=True)
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
+    antes_resp = sb.table("fornecedores").select("*").eq("id", fornecedor_id).execute()
     resp = sb.table("fornecedores").update(dados).eq("id", fornecedor_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Fornecedor não encontrado")
     atualizado = resp.data[0]
-    registrar_log(usuario, "atualizar", "fornecedor", fornecedor_id, f"Fornecedor {atualizado['nome']} atualizado")
+    antes = antes_resp.data[0] if antes_resp.data else None
+    registrar_log(usuario, "atualizar", "fornecedor", fornecedor_id, f"Fornecedor {atualizado['nome']} atualizado", dados_antes=antes, dados_depois=atualizado)
     return atualizado
 
 
 @router.delete("/{fornecedor_id}", status_code=204)
 def excluir_fornecedor(fornecedor_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
-    existente = sb.table("fornecedores").select("nome").eq("id", fornecedor_id).execute()
+    existente = sb.table("fornecedores").select("*").eq("id", fornecedor_id).execute()
     resp = sb.table("fornecedores").delete().eq("id", fornecedor_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Fornecedor não encontrado")
     nome = existente.data[0]["nome"] if existente.data else f"id={fornecedor_id}"
-    registrar_log(usuario, "excluir", "fornecedor", fornecedor_id, f"Fornecedor {nome} excluído")
+    registrar_log(usuario, "excluir", "fornecedor", fornecedor_id, f"Fornecedor {nome} excluído", dados_antes=(existente.data[0] if existente.data else None))

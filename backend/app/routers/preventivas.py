@@ -113,7 +113,7 @@ def criar_preventiva(plano: PlanoPreventivaCreate, usuario: UsuarioLogado = Depe
 
     resp = sb.table("planos_preventiva").insert(dados).execute()
     criado = resp.data[0]
-    registrar_log(usuario, "criar", "preventiva", criado["id"], f"Plano de preventiva criado para {maquina['codigo']}: {criado['descricao']}")
+    registrar_log(usuario, "criar", "preventiva", criado["id"], f"Plano de preventiva criado para {maquina['codigo']}: {criado['descricao']}", dados_depois=criado)
     return _enriquecer(criado, {maquina["id"]: maquina})
 
 
@@ -124,25 +124,30 @@ def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate, usuario: U
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
 
+    antes_resp = sb.table("planos_preventiva").select("*").eq("id", plano_id).execute()
+    if not antes_resp.data:
+        raise HTTPException(status_code=404, detail="Plano de preventiva não encontrado")
+    antes = antes_resp.data[0]
+
     resp = sb.table("planos_preventiva").update(dados).eq("id", plano_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Plano de preventiva não encontrado")
 
     atualizado = resp.data[0]
     maquina = sb.table("maquinas").select("id, codigo, horimetro_atual, km_atual").eq("id", atualizado["maquina_id"]).execute().data[0]
-    registrar_log(usuario, "atualizar", "preventiva", plano_id, f"Plano de preventiva de {maquina['codigo']} atualizado")
+    registrar_log(usuario, "atualizar", "preventiva", plano_id, f"Plano de preventiva de {maquina['codigo']} atualizado", dados_antes=antes, dados_depois=atualizado)
     return _enriquecer(atualizado, {maquina["id"]: maquina})
 
 
 @router.delete("/{plano_id}", status_code=204)
 def excluir_preventiva(plano_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
-    existente = sb.table("planos_preventiva").select("descricao, maquina_id").eq("id", plano_id).execute()
+    existente = sb.table("planos_preventiva").select("*").eq("id", plano_id).execute()
     resp = sb.table("planos_preventiva").delete().eq("id", plano_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Plano de preventiva não encontrado")
     descricao = existente.data[0]["descricao"] if existente.data else f"id={plano_id}"
-    registrar_log(usuario, "excluir", "preventiva", plano_id, f"Plano de preventiva excluído: {descricao}")
+    registrar_log(usuario, "excluir", "preventiva", plano_id, f"Plano de preventiva excluído: {descricao}", dados_antes=(existente.data[0] if existente.data else None))
 
 
 class ConcluirPreventivaPayload(BaseModel):

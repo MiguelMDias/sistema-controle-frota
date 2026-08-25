@@ -99,8 +99,24 @@ const financeiroComparacaoCentrosDemo = [
 ]
 
 const logsAuditoriaDemo = [
-  { id: -1, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'criar', entidade: 'maquina', entidade_id: -1, descricao: 'Máquina DEMO-001 cadastrada', created_at: new Date().toISOString() },
-  { id: -2, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'atualizar', entidade: 'nota_fiscal', entidade_id: -1, descricao: 'Nota fiscal 000001/1 atualizada', created_at: new Date(Date.now() - 3600_000).toISOString() },
+  {
+    id: -1, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'criar', entidade: 'maquina', entidade_id: -1,
+    descricao: 'Máquina DEMO-001 cadastrada', created_at: new Date().toISOString(),
+    dados_antes: null,
+    dados_depois: { codigo: 'DEMO-001', tipo: 'carro', situacao: 'ativa', ano: 2022 },
+  },
+  {
+    id: -2, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'atualizar', entidade: 'nota_fiscal', entidade_id: -1,
+    descricao: 'Nota fiscal 000001/1 atualizada', created_at: new Date(Date.now() - 3600_000).toISOString(),
+    dados_antes: { valor_total: 280.5, tipo: 'peca' },
+    dados_depois: { valor_total: 320.5, tipo: 'peca' },
+  },
+  {
+    id: -3, usuario_id: -1, usuario_nome: 'Admin Exemplo', acao: 'atualizar', entidade: 'abastecimento', entidade_id: -1,
+    descricao: 'Abastecimento de DEMO-001 atualizado', created_at: new Date(Date.now() - 7200_000).toISOString(),
+    dados_antes: { tipo_combustivel: 'gasolina', quantidade: 38 },
+    dados_depois: { tipo_combustivel: 'diesel', quantidade: 40 },
+  },
 ]
 
 // Mapeia padrões de rota (regex) para a resposta simulada.

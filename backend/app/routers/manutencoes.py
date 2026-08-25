@@ -66,7 +66,7 @@ def criar_manutencao(manutencao: ManutencaoCreate, usuario: UsuarioLogado = Depe
     )
     criada = sb.table("manutencoes").select(SELECT_COM_JOIN).eq("id", resp.data[0]["id"]).execute()
     achatada = _achatar(criada.data[0])
-    registrar_log(usuario, "criar", "manutencao", achatada["id"], f"Manutenção registrada para {achatada['maquina_codigo']} ({achatada['tipo']})")
+    registrar_log(usuario, "criar", "manutencao", achatada["id"], f"Manutenção registrada para {achatada['maquina_codigo']} ({achatada['tipo']})", dados_depois=resp.data[0])
     return achatada
     # obs: horimetro_atual/km_atual da máquina são atualizados automaticamente
     # pelo trigger trg_manutencoes_atualiza_leitura no banco
@@ -79,10 +79,11 @@ def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate, usuar
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
 
-    existente = sb.table("manutencoes").select("maquina_id").eq("id", manutencao_id).execute()
+    existente = sb.table("manutencoes").select("*").eq("id", manutencao_id).execute()
     if not existente.data:
         raise HTTPException(status_code=404, detail="Manutenção não encontrada")
-    validar_maquina_permite_lancamento(manutencao.maquina_id or existente.data[0]["maquina_id"])
+    antes = existente.data[0]
+    validar_maquina_permite_lancamento(manutencao.maquina_id or antes["maquina_id"])
 
     resp = sb.table("manutencoes").update(dados).eq("id", manutencao_id).execute()
     if not resp.data:
@@ -90,7 +91,7 @@ def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate, usuar
 
     atualizada = sb.table("manutencoes").select(SELECT_COM_JOIN).eq("id", manutencao_id).execute()
     achatada = _achatar(atualizada.data[0])
-    registrar_log(usuario, "atualizar", "manutencao", manutencao_id, f"Manutenção de {achatada['maquina_codigo']} atualizada")
+    registrar_log(usuario, "atualizar", "manutencao", manutencao_id, f"Manutenção de {achatada['maquina_codigo']} atualizada", dados_antes=antes, dados_depois=resp.data[0])
     return achatada
 
 
@@ -102,4 +103,4 @@ def excluir_manutencao(manutencao_id: int, usuario: UsuarioLogado = Depends(exig
     if not resp.data:
         raise HTTPException(status_code=404, detail="Manutenção não encontrada")
     maquina_codigo = _achatar(existente.data[0])["maquina_codigo"] if existente.data else "?"
-    registrar_log(usuario, "excluir", "manutencao", manutencao_id, f"Manutenção de {maquina_codigo} excluída")
+    registrar_log(usuario, "excluir", "manutencao", manutencao_id, f"Manutenção de {maquina_codigo} excluída", dados_antes=(existente.data[0] if existente.data else None))

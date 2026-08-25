@@ -9,6 +9,7 @@ import {
   ACOES_LOG,
 } from '../services/logs'
 import { useAuth } from '../services/auth'
+import LogDetalheModal from '../components/LogDetalheModal'
 
 const BADGE_ACAO = {
   criar: 'bg-green-100 text-green-700',
@@ -32,6 +33,7 @@ export default function CentralDeLogs() {
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
   const [busca, setBusca] = useState('')
+  const [visualizando, setVisualizando] = useState(null)
 
   const carregar = useCallback(() => {
     if (!isAdmin) return
@@ -134,7 +136,11 @@ export default function CentralDeLogs() {
               <tr><td colSpan={5} className="text-center py-8 text-gray-400">Nenhum registro encontrado para os filtros selecionados.</td></tr>
             )}
             {!carregando && logs.map((log) => (
-              <tr key={log.id} className="border-t border-gray-100 last:border-0 hover:bg-gray-50/50">
+              <tr
+                key={log.id}
+                onClick={() => setVisualizando(log)}
+                className="border-t border-gray-100 last:border-0 hover:bg-gray-50/50 cursor-pointer"
+              >
                 <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">{formatarDataHora(log.created_at)}</td>
                 <td className="px-4 py-2.5 font-medium text-gray-700 whitespace-nowrap">{log.usuario_nome}</td>
                 <td className="px-4 py-2.5">
@@ -151,6 +157,10 @@ export default function CentralDeLogs() {
       </div>
       {!carregando && logs.length >= 200 && (
         <p className="text-xs text-gray-400 mt-2">Mostrando os 200 registros mais recentes. Use os filtros para refinar a busca.</p>
+      )}
+
+      {visualizando && (
+        <LogDetalheModal log={visualizando} onClose={() => setVisualizando(null)} />
       )}
     </div>
   )

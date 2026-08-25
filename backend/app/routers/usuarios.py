@@ -40,6 +40,11 @@ def listar_usuarios(_: UsuarioLogado = Depends(exigir_admin)):
     return resp.data
 
 
+def _sem_senha(registro: dict) -> dict:
+    """Remove o hash de senha antes de guardar qualquer snapshot no log de auditoria."""
+    return {k: v for k, v in registro.items() if k != "senha_hash"}
+
+
 @router.post("", response_model=UsuarioOut, status_code=201)
 def criar_usuario(payload: UsuarioCreate, admin: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
@@ -56,7 +61,7 @@ def criar_usuario(payload: UsuarioCreate, admin: UsuarioLogado = Depends(exigir_
     }
     resp = sb.table("usuarios").insert(dados).execute()
     criado = resp.data[0]
-    registrar_log(admin, "criar", "usuario", criado["id"], f"Usuário {criado['nome']} ({criado['usuario']}) criado, papel: {criado['papel']}")
+    registrar_log(admin, "criar", "usuario", criado["id"], f"Usuário {criado['nome']} ({criado['usuario']}) criado, papel: {criado['papel']}", dados_depois=_sem_senha(criado))
     return UsuarioOut(id=criado["id"], nome=criado["nome"], usuario=criado["usuario"], papel=criado["papel"], ativo=criado["ativo"])
 
 
@@ -71,6 +76,11 @@ def atualizar_usuario(usuario_id: int, payload: UsuarioUpdate, admin: UsuarioLog
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
 
+    antes_resp = sb.table("usuarios").select("*").eq("id", usuario_id).execute()
+    if not antes_resp.data:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    antes = antes_resp.data[0]
+
     resp = sb.table("usuarios").update(dados).eq("id", usuario_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
@@ -80,7 +90,11 @@ def atualizar_usuario(usuario_id: int, payload: UsuarioUpdate, admin: UsuarioLog
     campos_alterados = [c for c in payload.model_dump(exclude_unset=True).keys() if c != "senha"]
     if payload.senha:
         campos_alterados.append("senha (redefinida)")
-    registrar_log(admin, "atualizar", "usuario", usuario_id, f"Usuário {atualizado['nome']} atualizado (campos: {', '.join(campos_alterados)})")
+    registrar_log(
+        admin, "atualizar", "usuario", usuario_id,
+        f"Usuário {atualizado['nome']} atualizado (campos: {', '.join(campos_alterados)})",
+        dados_antes=_sem_senha(antes), dados_depois=_sem_senha(atualizado),
+    )
     return UsuarioOut(
         id=atualizado["id"], nome=atualizado["nome"], usuario=atualizado["usuario"],
         papel=atualizado["papel"], ativo=atualizado["ativo"],
@@ -93,9 +107,9 @@ def excluir_usuario(usuario_id: int, atual: UsuarioLogado = Depends(exigir_admin
         raise HTTPException(status_code=400, detail="Você não pode excluir seu próprio usuário")
 
     sb = get_supabase()
-    existente = sb.table("usuarios").select("nome").eq("id", usuario_id).execute()
+    existente = sb.table("usuarios").select("*").eq("id", usuario_id).execute()
     resp = sb.table("usuarios").delete().eq("id", usuario_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     nome = existente.data[0]["nome"] if existente.data else f"id={usuario_id}"
-    registrar_log(atual, "excluir", "usuario", usuario_id, f"Usuário {nome} excluído")
+    registrar_log(atual, "excluir", "usuario", usuario_id, f"Usuário {nome} excluído", dados_antes=(_sem_senha(existente.data[0]) if existente.data else None))

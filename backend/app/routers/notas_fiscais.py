@@ -122,7 +122,7 @@ def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(o
 
     criada = sb.table("notas_fiscais").select(SELECT_COM_JOIN).eq("id", nota_id).execute()
     achatada = _achatar(criada.data[0])
-    registrar_log(usuario, "criar", "nota_fiscal", nota_id, f"Nota fiscal {achatada['numero']}/{achatada['serie']} cadastrada")
+    registrar_log(usuario, "criar", "nota_fiscal", nota_id, f"Nota fiscal {achatada['numero']}/{achatada['serie']} cadastrada", dados_depois=resp.data[0])
     return achatada
 
 
@@ -130,9 +130,10 @@ def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(o
 def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     sb = get_supabase()
 
-    existente = sb.table("notas_fiscais").select("id, numero, serie").eq("id", nota_id).execute()
+    existente = sb.table("notas_fiscais").select("*").eq("id", nota_id).execute()
     if not existente.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
+    antes = existente.data[0]
 
     _validar_referencias(sb, nota)
 
@@ -142,10 +143,12 @@ def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: Usuario
         for maquina_id in nota.maquina_ids:
             validar_maquina_permite_lancamento(maquina_id)
 
+    dados_depois_tabela = antes
     if dados:
         resp = sb.table("notas_fiscais").update(dados).eq("id", nota_id).execute()
         if not resp.data:
             raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
+        dados_depois_tabela = resp.data[0]
 
     if nota.maquina_ids is not None:
         # substitui os vínculos: apaga os antigos e recria com a lista nova
@@ -160,21 +163,21 @@ def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: Usuario
     atualizada = sb.table("notas_fiscais").select(SELECT_COM_JOIN).eq("id", nota_id).execute()
     if not atualizada.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
-    numero_serie = f"{existente.data[0]['numero']}/{existente.data[0]['serie']}"
-    registrar_log(usuario, "atualizar", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} atualizada")
+    numero_serie = f"{antes['numero']}/{antes['serie']}"
+    registrar_log(usuario, "atualizar", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} atualizada", dados_antes=antes, dados_depois=dados_depois_tabela)
     return _achatar(atualizada.data[0])
 
 
 @router.delete("/{nota_id}", status_code=204)
 def excluir_nota_fiscal(nota_id: int, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
-    existente = sb.table("notas_fiscais").select("numero, serie").eq("id", nota_id).execute()
+    existente = sb.table("notas_fiscais").select("*").eq("id", nota_id).execute()
     resp = sb.table("notas_fiscais").delete().eq("id", nota_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
     # notas_fiscais_maquinas e notas_fiscais_itens são apagadas em cascata pela FK ON DELETE CASCADE
     numero_serie = f"{existente.data[0]['numero']}/{existente.data[0]['serie']}" if existente.data else f"id={nota_id}"
-    registrar_log(usuario, "excluir", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} excluída")
+    registrar_log(usuario, "excluir", "nota_fiscal", nota_id, f"Nota fiscal {numero_serie} excluída", dados_antes=(existente.data[0] if existente.data else None))
 
 
 # ==================== Importação de XML (NF-e) ====================

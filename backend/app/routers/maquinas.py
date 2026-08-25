@@ -85,7 +85,7 @@ def criar_maquina(maquina: MaquinaCreate, usuario: UsuarioLogado = Depends(obter
 
     resp = sb.table("maquinas").insert(maquina.model_dump(mode="json")).execute()
     nova = resp.data[0]
-    registrar_log(usuario, "criar", "maquina", nova["id"], f"Máquina {nova['codigo']} cadastrada")
+    registrar_log(usuario, "criar", "maquina", nova["id"], f"Máquina {nova['codigo']} cadastrada", dados_depois=nova)
     return nova
 
 
@@ -101,12 +101,17 @@ def atualizar_maquina(
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
 
+    antes_resp = sb.table("maquinas").select("*").eq("id", maquina_id).execute()
+    if not antes_resp.data:
+        raise HTTPException(status_code=404, detail="Máquina não encontrada")
+    antes = antes_resp.data[0]
+
     resp = sb.table("maquinas").update(dados).eq("id", maquina_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Máquina não encontrada")
     atualizada = resp.data[0]
     campos = ", ".join(dados.keys())
-    registrar_log(usuario, "atualizar", "maquina", maquina_id, f"Máquina {atualizada['codigo']} atualizada (campos: {campos})")
+    registrar_log(usuario, "atualizar", "maquina", maquina_id, f"Máquina {atualizada['codigo']} atualizada (campos: {campos})", dados_antes=antes, dados_depois=atualizada)
     return atualizada
 
 
@@ -118,6 +123,7 @@ def excluir_maquina(maquina_id: int, usuario: UsuarioLogado = Depends(exigir_adm
     abastecimentos, notas fiscais, checklists).
     """
     sb = get_supabase()
+    antes_resp = sb.table("maquinas").select("*").eq("id", maquina_id).execute()
     resp = (
         sb.table("maquinas")
         .update({"situacao": "inativa"})
@@ -126,7 +132,8 @@ def excluir_maquina(maquina_id: int, usuario: UsuarioLogado = Depends(exigir_adm
     )
     if not resp.data:
         raise HTTPException(status_code=404, detail="Máquina não encontrada")
-    registrar_log(usuario, "excluir", "maquina", maquina_id, f"Máquina {resp.data[0]['codigo']} marcada como inativa (exclusão reversível)")
+    antes = antes_resp.data[0] if antes_resp.data else None
+    registrar_log(usuario, "excluir", "maquina", maquina_id, f"Máquina {resp.data[0]['codigo']} marcada como inativa (exclusão reversível)", dados_antes=antes, dados_depois=resp.data[0])
 
 
 @router.delete("/{maquina_id}/permanente", status_code=204)
@@ -138,8 +145,8 @@ def excluir_maquina_permanente(maquina_id: int, usuario: UsuarioLogado = Depends
     fiscal ou checklist), já que essa relação seria perdida.
     """
     sb = get_supabase()
-    codigo_resp = sb.table("maquinas").select("codigo").eq("id", maquina_id).execute()
-    codigo = codigo_resp.data[0]["codigo"] if codigo_resp.data else f"id={maquina_id}"
+    antes_resp = sb.table("maquinas").select("*").eq("id", maquina_id).execute()
+    codigo = antes_resp.data[0]["codigo"] if antes_resp.data else f"id={maquina_id}"
     try:
         resp = sb.table("maquinas").delete().eq("id", maquina_id).execute()
     except Exception as exc:
@@ -150,7 +157,7 @@ def excluir_maquina_permanente(maquina_id: int, usuario: UsuarioLogado = Depends
         ) from exc
     if not resp.data:
         raise HTTPException(status_code=404, detail="Máquina não encontrada")
-    registrar_log(usuario, "excluir_permanente", "maquina", maquina_id, f"Máquina {codigo} excluída permanentemente")
+    registrar_log(usuario, "excluir_permanente", "maquina", maquina_id, f"Máquina {codigo} excluída permanentemente", dados_antes=(antes_resp.data[0] if antes_resp.data else None))
 
 
 @router.get("/centros-despesa/listar", response_model=list[CentroDespesa])
@@ -171,22 +178,22 @@ def criar_centro_despesa(centro: CentroDespesaCreate, usuario: UsuarioLogado = D
         raise HTTPException(status_code=409, detail=f"Já existe um centro de despesa '{centro.nome}'")
     resp = sb.table("centros_despesa").insert(centro.model_dump()).execute()
     novo = resp.data[0]
-    registrar_log(usuario, "criar", "centro_despesa", novo["id"], f"Centro de despesa '{novo['nome']}' criado")
+    registrar_log(usuario, "criar", "centro_despesa", novo["id"], f"Centro de despesa '{novo['nome']}' criado", dados_depois=novo)
     return novo
 
 
 @router.patch("/centros-despesa/{centro_id}", response_model=CentroDespesa)
 def atualizar_centro_despesa(centro_id: int, centro: CentroDespesaCreate, usuario: UsuarioLogado = Depends(exigir_admin)):
     sb = get_supabase()
-    existe = sb.table("centros_despesa").select("id, nome").eq("id", centro_id).execute()
+    existe = sb.table("centros_despesa").select("*").eq("id", centro_id).execute()
     if not existe.data:
         raise HTTPException(status_code=404, detail="Centro de despesa não encontrado")
     duplicado = sb.table("centros_despesa").select("id").eq("nome", centro.nome).neq("id", centro_id).execute()
     if duplicado.data:
         raise HTTPException(status_code=409, detail=f"Já existe um centro de despesa '{centro.nome}'")
-    nome_antigo = existe.data[0]["nome"]
+    antes = existe.data[0]
     resp = sb.table("centros_despesa").update({"nome": centro.nome}).eq("id", centro_id).execute()
-    registrar_log(usuario, "atualizar", "centro_despesa", centro_id, f"Centro de despesa renomeado de '{nome_antigo}' para '{centro.nome}'")
+    registrar_log(usuario, "atualizar", "centro_despesa", centro_id, f"Centro de despesa renomeado de '{antes['nome']}' para '{centro.nome}'", dados_antes=antes, dados_depois=resp.data[0])
     return resp.data[0]
 
 
@@ -194,9 +201,11 @@ def atualizar_centro_despesa(centro_id: int, centro: CentroDespesaCreate, usuari
 def alternar_situacao_centro_despesa(centro_id: int, ativo: bool, usuario: UsuarioLogado = Depends(exigir_admin)):
     """Ativa ou desativa um centro de despesa (soft delete -- preserva o histórico de custos já lançados)."""
     sb = get_supabase()
+    antes_resp = sb.table("centros_despesa").select("*").eq("id", centro_id).execute()
     resp = sb.table("centros_despesa").update({"ativo": ativo}).eq("id", centro_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Centro de despesa não encontrado")
     atualizado = resp.data[0]
-    registrar_log(usuario, "ativar" if ativo else "desativar", "centro_despesa", centro_id, f"Centro de despesa '{atualizado['nome']}' {'ativado' if ativo else 'desativado'}")
+    antes = antes_resp.data[0] if antes_resp.data else None
+    registrar_log(usuario, "ativar" if ativo else "desativar", "centro_despesa", centro_id, f"Centro de despesa '{atualizado['nome']}' {'ativado' if ativo else 'desativado'}", dados_antes=antes, dados_depois=atualizado)
     return atualizado

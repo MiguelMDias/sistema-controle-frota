@@ -55,7 +55,7 @@ def criar_abastecimento(abastecimento: AbastecimentoCreate, usuario: UsuarioLoga
     resp = sb.table("abastecimentos").insert(abastecimento.model_dump(mode="json")).execute()
     criado = sb.table("abastecimentos").select(SELECT_COM_JOIN).eq("id", resp.data[0]["id"]).execute()
     achatado = _achatar(criado.data[0])
-    registrar_log(usuario, "criar", "abastecimento", achatado["id"], f"Abastecimento registrado para {achatado['maquina_codigo']}")
+    registrar_log(usuario, "criar", "abastecimento", achatado["id"], f"Abastecimento registrado para {achatado['maquina_codigo']}", dados_depois=resp.data[0])
     return achatado
     # horimetro_atual/km_atual são atualizados automaticamente pelo trigger no banco
 
@@ -67,10 +67,11 @@ def atualizar_abastecimento(abastecimento_id: int, abastecimento: AbastecimentoU
     if not dados:
         raise HTTPException(status_code=400, detail="Nenhum campo enviado para atualização")
 
-    existente = sb.table("abastecimentos").select("maquina_id").eq("id", abastecimento_id).execute()
+    existente = sb.table("abastecimentos").select("*").eq("id", abastecimento_id).execute()
     if not existente.data:
         raise HTTPException(status_code=404, detail="Abastecimento não encontrado")
-    validar_maquina_permite_lancamento(abastecimento.maquina_id or existente.data[0]["maquina_id"])
+    antes = existente.data[0]
+    validar_maquina_permite_lancamento(abastecimento.maquina_id or antes["maquina_id"])
 
     resp = sb.table("abastecimentos").update(dados).eq("id", abastecimento_id).execute()
     if not resp.data:
@@ -78,7 +79,7 @@ def atualizar_abastecimento(abastecimento_id: int, abastecimento: AbastecimentoU
 
     atualizado = sb.table("abastecimentos").select(SELECT_COM_JOIN).eq("id", abastecimento_id).execute()
     achatado = _achatar(atualizado.data[0])
-    registrar_log(usuario, "atualizar", "abastecimento", abastecimento_id, f"Abastecimento de {achatado['maquina_codigo']} atualizado")
+    registrar_log(usuario, "atualizar", "abastecimento", abastecimento_id, f"Abastecimento de {achatado['maquina_codigo']} atualizado", dados_antes=antes, dados_depois=resp.data[0])
     return achatado
 
 
@@ -90,7 +91,7 @@ def excluir_abastecimento(abastecimento_id: int, usuario: UsuarioLogado = Depend
     if not resp.data:
         raise HTTPException(status_code=404, detail="Abastecimento não encontrado")
     maquina_codigo = _achatar(existente.data[0])["maquina_codigo"] if existente.data else "?"
-    registrar_log(usuario, "excluir", "abastecimento", abastecimento_id, f"Abastecimento de {maquina_codigo} excluído")
+    registrar_log(usuario, "excluir", "abastecimento", abastecimento_id, f"Abastecimento de {maquina_codigo} excluído", dados_antes=(existente.data[0] if existente.data else None))
 
 
 @router.get("/consumo/{maquina_id}")
