@@ -87,7 +87,7 @@ export default function PreventivaModal({ maquinas, onClose, onSave }) {
             vence assim que qualquer um deles for atingido primeiro.
           </p>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Campo label="A cada (horas)">
               <input
                 type="number"

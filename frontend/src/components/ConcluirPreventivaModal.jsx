@@ -67,7 +67,7 @@ export default function ConcluirPreventivaModal({ plano, fornecedores, onClose, 
             a próxima data/leitura de vencimento deste plano.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Data de execução *">
               <input
                 required
@@ -101,7 +101,7 @@ export default function ConcluirPreventivaModal({ plano, fornecedores, onClose, 
             />
           </Campo>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {plano.intervalo_horimetro != null && (
               <Campo label="Horímetro atual *">
                 <input

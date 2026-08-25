@@ -27,7 +27,7 @@ export default function NotaFiscalDetalheModal({ nota, centrosDespesa, onClose, 
         </div>
 
         <div className="p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Data de Emissão" valor={formatarData(nota.data_emissao)} />
             <Campo label="Tipo" valor={labelTipoNota(nota.tipo)} />
             <Campo label="Fornecedor" valor={nota.fornecedor_nome || '—'} />
@@ -54,7 +54,7 @@ export default function NotaFiscalDetalheModal({ nota, centrosDespesa, onClose, 
           <div>
             <span className="block text-sm text-gray-500 mb-2">Itens da nota</span>
             {nota.itens?.length > 0 ? (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 text-left text-gray-500">

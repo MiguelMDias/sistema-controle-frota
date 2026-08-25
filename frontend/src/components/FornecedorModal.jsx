@@ -82,7 +82,7 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
             />
           </Campo>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Telefone">
               <input
                 value={form.telefone}

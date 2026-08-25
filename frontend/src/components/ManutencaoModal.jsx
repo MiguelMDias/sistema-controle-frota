@@ -75,7 +75,7 @@ export default function ManutencaoModal({ manutencao, maquinas, fornecedores, on
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {erro && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg">{erro}</div>}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Máquina *">
               <select
                 required
@@ -100,7 +100,7 @@ export default function ManutencaoModal({ manutencao, maquinas, fornecedores, on
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Tipo *">
               <select
                 required
@@ -151,7 +151,7 @@ export default function ManutencaoModal({ manutencao, maquinas, fornecedores, on
             </select>
           </Campo>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Campo label="Horímetro">
               <input
                 type="number"

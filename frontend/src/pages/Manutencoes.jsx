@@ -141,7 +141,7 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
@@ -248,7 +248,7 @@ function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">

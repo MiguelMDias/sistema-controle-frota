@@ -91,7 +91,7 @@ export default function UsuarioModal({ usuario, onClose, onSave }) {
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
               <span className="block text-sm text-gray-600 mb-1">Papel</span>
               <select

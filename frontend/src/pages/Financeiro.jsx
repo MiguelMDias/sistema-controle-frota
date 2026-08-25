@@ -184,7 +184,7 @@ function AbaCentrosDespesa() {
         Mostrar inativos
       </label>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto max-w-2xl">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500">
@@ -351,7 +351,7 @@ function AbaCustoPorMes() {
         <input type="number" value={ano} onChange={(e) => setAno(Number(e.target.value))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
       </label>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500">
@@ -458,7 +458,7 @@ function ComparacaoPeriodos() {
       {erro && <div className="bg-red-50 text-red-700 text-sm px-4 py-2 rounded-lg mb-4 max-w-md">{erro}</div>}
 
       {dados && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden max-w-2xl">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto max-w-2xl">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-left text-gray-500">
@@ -523,7 +523,7 @@ function ComparacaoCentros() {
         <SeletorPeriodo dataInicio={dataInicio} dataFim={dataFim} onChangeInicio={setDataInicio} onChangeFim={setDataFim} />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden max-w-2xl">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto max-w-2xl">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500">

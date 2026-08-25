@@ -97,7 +97,7 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {erro && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg">{erro}</div>}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Máquina *">
               <select
                 required
@@ -122,7 +122,7 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Tipo de Combustível *">
               <select
                 required
@@ -152,7 +152,7 @@ export default function AbastecimentoModal({ abastecimento, maquinas, fornecedor
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label={`Quantidade (${unidadeQuantidade(form.tipo_combustivel)}) *`}>
               <input
                 required

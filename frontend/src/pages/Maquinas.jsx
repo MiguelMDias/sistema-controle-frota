@@ -120,7 +120,7 @@ export default function Maquinas() {
         />
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
         <FiltroSelect label="Tipo" value={tipo} onChange={setTipo} opcoes={TIPOS_MAQUINA} />
         <FiltroSelect label="Situação" value={situacao} onChange={setSituacao} opcoes={SITUACOES_MAQUINA} />
         <FiltroSelect
@@ -133,7 +133,7 @@ export default function Maquinas() {
 
       {erro && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">{erro}</div>}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">

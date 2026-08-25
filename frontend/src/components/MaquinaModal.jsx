@@ -89,7 +89,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
             <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg">{erro}</div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Código *">
               <input
                 required
@@ -109,7 +109,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Tipo *">
               <select
                 required
@@ -136,7 +136,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Marca">
               <input
                 value={form.marca}
@@ -155,7 +155,7 @@ export default function MaquinaModal({ maquina, onClose, onSave }) {
             </Campo>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Ano">
               <input
                 type="number"
