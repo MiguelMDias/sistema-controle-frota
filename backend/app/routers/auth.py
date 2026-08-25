@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.auth_deps import UsuarioLogado, obter_usuario_atual
-from app.auth_utils import criar_token, verificar_senha
+from app.auth_utils import criar_token, hash_senha, verificar_senha
 from app.database import get_supabase
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -51,3 +51,36 @@ class MeResponse(BaseModel):
 def me(usuario: UsuarioLogado = Depends(obter_usuario_atual)):
     """Confirma se o token ainda é válido e devolve os dados do usuário logado."""
     return MeResponse(id=usuario.id, usuario=usuario.usuario, papel=usuario.papel)
+
+
+class RegistroPayload(BaseModel):
+    nome: str
+    usuario: str
+    senha: str
+
+
+@router.post("/registrar", response_model=LoginResponse, status_code=201)
+def registrar(payload: RegistroPayload):
+    """
+    Cadastro público de novo usuário. Sempre criado com papel 'operador',
+    independente do que for enviado -- só um administrador pode promover
+    alguém a admin depois, pela tela de Usuários.
+    Já retorna o token de login, pra entrar direto após se cadastrar.
+    """
+    sb = get_supabase()
+
+    existe = sb.table("usuarios").select("id").eq("usuario", payload.usuario).execute()
+    if existe.data:
+        raise HTTPException(status_code=409, detail=f"Já existe um usuário com o código {payload.usuario}")
+
+    dados = {
+        "nome": payload.nome,
+        "usuario": payload.usuario,
+        "senha_hash": hash_senha(payload.senha),
+        "papel": "operador",
+    }
+    resp = sb.table("usuarios").insert(dados).execute()
+    criado = resp.data[0]
+
+    token = criar_token(criado["id"], criado["usuario"], criado["papel"])
+    return LoginResponse(token=token, usuario=criado["usuario"], nome=criado["nome"], papel=criado["papel"])

@@ -3,6 +3,7 @@ import { AuthProvider } from './services/auth'
 import RotaProtegida from './components/RotaProtegida'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import Cadastro from './pages/Cadastro'
 import Dashboard from './pages/Dashboard'
 import Maquinas from './pages/Maquinas'
 import Fornecedores from './pages/Fornecedores'
@@ -20,6 +21,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
 
           <Route element={<RotaProtegida />}>
             <Route element={<Layout />}>

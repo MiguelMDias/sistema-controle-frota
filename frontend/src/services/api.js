@@ -1,16 +1,47 @@
 import axios from 'axios'
+import { obterMock } from './mockData'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
 })
 
-// Anexa o token JWT em toda requisição, se o usuário estiver logado.
+// Adapter usado só no modo Observador: nunca sai da máquina do usuário,
+// nunca chama o backend real. Leituras (GET) retornam dados de demonstração;
+// qualquer escrita (POST/PUT/PATCH/DELETE) é recusada com uma mensagem clara.
+function adapterObservador(config) {
+  const metodo = (config.method || 'get').toLowerCase()
+
+  if (metodo === 'get') {
+    return Promise.resolve({
+      data: obterMock(config.url),
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config,
+    })
+  }
+
+  const erro = new Error('Ação não permitida no modo Observador (somente leitura).')
+  erro.isAxiosError = true
+  erro.response = {
+    status: 403,
+    data: { detail: 'Ação não permitida no modo Observador. Esta é uma visualização somente leitura, com dados de demonstração.' },
+  }
+  return Promise.reject(erro)
+}
+
 api.interceptors.request.use((config) => {
   const salvo = localStorage.getItem('auth')
-  if (salvo) {
-    const { token } = JSON.parse(salvo)
+  if (!salvo) return config
+
+  const { token, papel } = JSON.parse(salvo)
+
+  if (papel === 'observador') {
+    config.adapter = adapterObservador
+  } else if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
   return config
 })
 
