@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react'
 import { listarMaquinas, listarCentrosDespesa } from '../services/maquinas'
 import { api } from '../services/api'
@@ -17,6 +18,7 @@ import { useAuth } from '../services/auth'
 
 export default function NotasFiscais() {
   const { isAdmin } = useAuth()
+  const location = useLocation()
   const [notas, setNotas] = useState([])
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
@@ -33,6 +35,14 @@ export default function NotasFiscais() {
 
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
+
+  // Atalho rápido do Dashboard ("Nova Nota Fiscal") já abre o formulário direto
+  useEffect(() => {
+    if (location.state?.abrirNovo) {
+      setModalAberto(true)
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
   const [visualizando, setVisualizando] = useState(null)
 
   useEffect(() => {

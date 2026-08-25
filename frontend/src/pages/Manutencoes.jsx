@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Plus, Pencil, Trash2, CheckCircle2 } from 'lucide-react'
 import { listarMaquinas } from '../services/maquinas'
 import { api } from '../services/api'
@@ -27,10 +28,20 @@ const BADGE_STATUS_PREVENTIVA = {
 }
 
 export default function Manutencoes() {
+  const location = useLocation()
+  const abrirNovoAoMontar = Boolean(location.state?.abrirNovo)
   const [aba, setAba] = useState('manutencoes')
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [fornecedores, setFornecedores] = useState([])
+
+  // Atalho rápido do Dashboard ("Nova Manutenção") já abre o formulário direto na aba certa
+  useEffect(() => {
+    if (abrirNovoAoMontar) {
+      setAba('manutencoes')
+      window.history.replaceState({}, document.title)
+    }
+  }, [abrirNovoAoMontar])
 
   useEffect(() => {
     // lista completa: usada nos filtros (permite ver histórico de máquinas inativas/baixadas)
@@ -50,7 +61,7 @@ export default function Manutencoes() {
       </div>
 
       {aba === 'manutencoes' ? (
-        <AbaManutencoes maquinas={maquinas} maquinasDisponiveis={maquinasDisponiveis} fornecedores={fornecedores} />
+        <AbaManutencoes maquinas={maquinas} maquinasDisponiveis={maquinasDisponiveis} fornecedores={fornecedores} abrirAoMontar={abrirNovoAoMontar} />
       ) : (
         <AbaPreventivas maquinas={maquinas} maquinasDisponiveis={maquinasDisponiveis} fornecedores={fornecedores} />
       )}
@@ -73,7 +84,7 @@ function AbaBotao({ label, ativa, onClick }) {
 
 // ==================== ABA MANUTENÇÕES ====================
 
-function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores }) {
+function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMontar }) {
   const { isAdmin } = useAuth()
   const [manutencoes, setManutencoes] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -82,6 +93,10 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores }) {
   const [status, setStatus] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
+
+  useEffect(() => {
+    if (abrirAoMontar) setModalAberto(true)
+  }, [abrirAoMontar])
 
   const carregar = useCallback(async () => {
     setCarregando(true)

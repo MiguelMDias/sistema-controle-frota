@@ -60,6 +60,27 @@ const dashboardCustosPorCategoriaDemo = [
   { categoria: 'Combustível', total: 260 },
 ]
 
+const dashboardFrotaPorSituacaoDemo = [
+  { situacao: 'ativa', label: 'Ativa', total: 2 },
+  { situacao: 'manutencao', label: 'Em Manutenção', total: 1 },
+]
+
+const dashboardFrotaPorTipoDemo = [
+  { tipo: 'carro', label: 'Carro', total: 1 },
+  { tipo: 'empilhadeira_eletrica', label: 'Empilhadeira Elétrica', total: 1 },
+  { tipo: 'trator', label: 'Trator', total: 1 },
+]
+
+const dashboardAlertasDemo = [
+  { severidade: 'alta', tipo: 'preventiva_vencida', maquina_codigo: 'DEMO-003', descricao: 'Preventiva vencida: Revisão a cada 250h (exemplo)' },
+  { severidade: 'media', tipo: 'checklist_pendencia', maquina_codigo: 'DEMO-001', descricao: 'Checklist com pendência em 24/08' },
+]
+
+const dashboardTopCustosDemo = [
+  { maquina_id: -2, codigo: 'DEMO-002', total: 320.5 },
+  { maquina_id: -1, codigo: 'DEMO-001', total: 260 },
+]
+
 const centrosDespesaDemo = [
   { id: -1, nome: 'Logística (exemplo)', ativo: true },
   { id: -2, nome: 'Manutenção (exemplo)', ativo: true },
@@ -127,6 +148,10 @@ const ROTAS_MOCK = [
   { padrao: /^\/dashboard\/resumo$/, dados: () => dashboardResumoDemo },
   { padrao: /^\/dashboard\/custos-por-mes/, dados: () => dashboardCustosPorMesDemo },
   { padrao: /^\/dashboard\/custos-por-categoria/, dados: () => dashboardCustosPorCategoriaDemo },
+  { padrao: /^\/dashboard\/frota-por-situacao/, dados: () => dashboardFrotaPorSituacaoDemo },
+  { padrao: /^\/dashboard\/frota-por-tipo/, dados: () => dashboardFrotaPorTipoDemo },
+  { padrao: /^\/dashboard\/alertas/, dados: () => dashboardAlertasDemo },
+  { padrao: /^\/dashboard\/top-custos-maquinas/, dados: () => dashboardTopCustosDemo },
   { padrao: /^\/abastecimentos\/consumo\//, dados: () => ({ maquina_id: -1, maquina_codigo: 'DEMO-001', consumo_medio: 11.4, unidade: 'km/litro' }) },
   { padrao: /^\/financeiro\/visao-geral/, dados: () => financeiroVisaoGeralDemo },
   { padrao: /^\/financeiro\/custo-por-maquina/, dados: () => financeiroCustoPorMaquinaDemo },

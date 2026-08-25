@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Gauge } from 'lucide-react'
 import { listarMaquinas } from '../services/maquinas'
 import { api } from '../services/api'
@@ -17,6 +18,7 @@ import { useAuth } from '../services/auth'
 
 export default function Abastecimentos() {
   const { isAdmin } = useAuth()
+  const location = useLocation()
   const [abastecimentos, setAbastecimentos] = useState([])
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
@@ -31,6 +33,14 @@ export default function Abastecimentos() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [consumo, setConsumo] = useState(null)
+
+  // Atalho rápido do Dashboard ("Novo Abastecimento") já abre o formulário direto
+  useEffect(() => {
+    if (location.state?.abrirNovo) {
+      setModalAberto(true)
+      window.history.replaceState({}, document.title) // limpa o state pra não reabrir num F5
+    }
+  }, [location.state])
 
   useEffect(() => {
     // lista completa: usada nos filtros (permite ver histórico de máquinas inativas/baixadas)
