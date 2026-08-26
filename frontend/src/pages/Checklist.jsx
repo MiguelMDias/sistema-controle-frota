@@ -66,11 +66,11 @@ export default function Checklist() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Checklist</h1>
         <button
           onClick={() => setModalModelo(true)}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-primary-dark w-full sm:w-auto"
         >
           <Plus size={16} /> Novo Modelo
         </button>
@@ -83,7 +83,7 @@ export default function Checklist() {
             <button
               key={m.id}
               onClick={() => iniciarExecucao(m)}
-              className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm hover:bg-gray-50"
             >
               <PlayCircle size={16} className="text-primary" />
               {m.codigo}
@@ -93,16 +93,48 @@ export default function Checklist() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4 mb-4">
         <FiltroSelect label="Máquina" value={maquinaId} onChange={setMaquinaId}
           opcoes={maquinas.map((m) => ({ value: m.id, label: m.codigo }))} />
-        <label className="flex items-center gap-2 text-sm text-gray-600 mt-5">
+        <label className="flex items-center gap-2 text-sm text-gray-600 sm:pb-2.5">
           <input type="checkbox" checked={apenasPendencia} onChange={(e) => setApenasPendencia(e.target.checked)} />
           Apenas com pendência
         </label>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+      {/* Cartões -- só no mobile, um registro por bloco com o essencial */}
+      <div className="md:hidden space-y-3">
+        {carregando && <p className="text-center py-8 text-gray-400 text-sm">Carregando...</p>}
+        {!carregando && execucoes.length === 0 && (
+          <p className="text-center py-8 text-gray-400 text-sm">Nenhum checklist registrado ainda.</p>
+        )}
+        {!carregando && execucoes.map((e) => (
+          <div key={e.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">{e.maquina_codigo}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{e.operador || 'Operador não informado'}</p>
+              </div>
+              {e.tem_pendencia ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded-full shrink-0">
+                  <AlertTriangle size={12} /> Pendência
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full shrink-0">
+                  <CheckCircle2 size={12} /> OK
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between text-sm text-gray-600 mt-3 pt-3 border-t border-gray-100">
+              <span>{formatarDataHora(e.data)}</span>
+              <span>Leitura: {e.horimetro ?? e.km ?? '—'}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabela -- só no desktop */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
@@ -155,12 +187,12 @@ export default function Checklist() {
 
 function FiltroSelect({ label, value, onChange, opcoes }) {
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-1 w-full sm:w-auto">
       <span className="text-xs text-gray-500">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white min-w-[150px]"
+        className="border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[150px]"
       >
         <option value="">Todas</option>
         {opcoes.map((o) => (

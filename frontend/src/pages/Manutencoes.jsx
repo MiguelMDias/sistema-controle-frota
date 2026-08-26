@@ -130,8 +130,8 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:flex-wrap">
           <FiltroSelect label="Máquina" value={maquinaId} onChange={setMaquinaId}
             opcoes={maquinas.map((m) => ({ value: m.id, label: m.codigo }))} />
           <FiltroSelect label="Tipo" value={tipo} onChange={setTipo} opcoes={TIPOS_MANUTENCAO} />
@@ -139,13 +139,51 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
         </div>
         <button
           onClick={() => { setEditando(null); setModalAberto(true) }}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark shrink-0"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-primary-dark w-full sm:w-auto shrink-0"
         >
           <Plus size={16} /> Nova Manutenção
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+      {/* Cartões -- só no mobile, um registro por bloco com o essencial */}
+      <div className="md:hidden space-y-3">
+        {carregando && <p className="text-center py-8 text-gray-400 text-sm">Carregando...</p>}
+        {!carregando && manutencoes.length === 0 && (
+          <p className="text-center py-8 text-gray-400 text-sm">Nenhuma manutenção encontrada.</p>
+        )}
+        {!carregando && manutencoes.map((m) => (
+          <div key={m.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">{m.maquina_codigo}</p>
+                <span className="inline-block text-xs font-medium text-primary bg-indigo-50 px-2 py-0.5 rounded-full mt-1 capitalize">
+                  {m.tipo}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400 shrink-0">{formatarData(m.data)}</span>
+            </div>
+            {m.descricao && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{m.descricao}</p>}
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+              <span className="text-sm font-medium text-gray-700">
+                {m.custo != null ? formatarMoeda(m.custo) : 'Sem custo informado'}
+              </span>
+              <div className="flex gap-4">
+                <button onClick={() => { setEditando(m); setModalAberto(true) }} className="text-gray-400 hover:text-primary p-1">
+                  <Pencil size={17} />
+                </button>
+                {isAdmin && (
+                  <button onClick={() => excluir(m)} className="text-gray-400 hover:text-red-600 p-1">
+                    <Trash2 size={17} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabela -- só no desktop */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
@@ -317,12 +355,12 @@ function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
 
 function FiltroSelect({ label, value, onChange, opcoes }) {
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-1 w-full sm:w-auto">
       <span className="text-xs text-gray-500">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white min-w-[150px]"
+        className="border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[150px]"
       >
         <option value="">Todos</option>
         {opcoes.map((o) => (

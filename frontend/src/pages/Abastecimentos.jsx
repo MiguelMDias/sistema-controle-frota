@@ -97,30 +97,30 @@ export default function Abastecimentos() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <h1 className="text-2xl font-semibold text-gray-800">Abastecimentos</h1>
         <button
           onClick={() => { setEditando(null); setModalAberto(true) }}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-primary-dark w-full sm:w-auto"
         >
           <Plus size={16} /> Novo Abastecimento
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 mb-4">
         <FiltroSelect label="Máquina" value={maquinaId} onChange={setMaquinaId}
           opcoes={maquinas.map((m) => ({ value: m.id, label: m.codigo }))} />
         <FiltroSelect label="Tipo de Combustível" value={tipoCombustivel} onChange={setTipoCombustivel}
           opcoes={TIPOS_COMBUSTIVEL} />
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 w-full sm:w-auto">
           <span className="text-xs text-gray-500">Período de</span>
           <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            className="border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm w-full sm:w-auto" />
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 w-full sm:w-auto">
           <span className="text-xs text-gray-500">até</span>
           <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            className="border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm w-full sm:w-auto" />
         </label>
       </div>
 
@@ -143,7 +143,46 @@ export default function Abastecimentos() {
         </p>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+      {/* Cartões -- só no mobile, um registro por bloco com o essencial */}
+      <div className="md:hidden space-y-3">
+        {carregando && <p className="text-center py-8 text-gray-400 text-sm">Carregando...</p>}
+        {!carregando && abastecimentos.length === 0 && (
+          <p className="text-center py-8 text-gray-400 text-sm">Nenhum abastecimento encontrado.</p>
+        )}
+        {!carregando && abastecimentos.map((a) => (
+          <div key={a.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">{a.maquina_codigo}</p>
+                <span className="inline-block text-xs font-medium text-primary bg-indigo-50 px-2 py-0.5 rounded-full mt-1">
+                  {labelTipoCombustivel(a.tipo_combustivel)}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400 shrink-0">{formatarData(a.data)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-2">
+              <span className="text-gray-600">{a.quantidade} {unidadeQuantidade(a.tipo_combustivel)}</span>
+              <span className="font-semibold text-gray-800">{formatarMoeda(a.valor_total)}</span>
+            </div>
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-400">{a.fornecedor_nome || 'Sem fornecedor'}</span>
+              <div className="flex gap-4">
+                <button onClick={() => { setEditando(a); setModalAberto(true) }} className="text-gray-400 hover:text-primary p-1">
+                  <Pencil size={17} />
+                </button>
+                {isAdmin && (
+                  <button onClick={() => excluir(a)} className="text-gray-400 hover:text-red-600 p-1">
+                    <Trash2 size={17} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabela -- só no desktop */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
@@ -195,12 +234,12 @@ export default function Abastecimentos() {
 
 function FiltroSelect({ label, value, onChange, opcoes }) {
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-1 w-full sm:w-auto">
       <span className="text-xs text-gray-500">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white min-w-[160px]"
+        className="border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[160px]"
       >
         <option value="">Todos</option>
         {opcoes.map((o) => (
