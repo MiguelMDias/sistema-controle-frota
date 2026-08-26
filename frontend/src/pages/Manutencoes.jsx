@@ -97,6 +97,7 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
   const [status, setStatus] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
+  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   useEffect(() => {
     if (abrirAoMontar) setModalAberto(true)
@@ -104,6 +105,7 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
 
   const carregar = useCallback(async () => {
     setCarregando(true)
+    setMostrarTodos(false)
     try {
       const dados = await listarManutencoes({ maquina_id: maquinaId || undefined, tipo, status })
       setManutencoes(dados)
@@ -151,7 +153,7 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
         {!carregando && manutencoes.length === 0 && (
           <p className="text-center py-8 text-gray-400 text-sm">Nenhuma manutenção encontrada.</p>
         )}
-        {!carregando && manutencoes.map((m) => (
+        {!carregando && (mostrarTodos ? manutencoes : manutencoes.slice(0, 3)).map((m) => (
           <div key={m.id} className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -180,6 +182,14 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
             </div>
           </div>
         ))}
+        {!carregando && manutencoes.length > 3 && (
+          <BotaoVerMais
+            mostrando={mostrarTodos ? manutencoes.length : Math.min(3, manutencoes.length)}
+            total={manutencoes.length}
+            expandido={mostrarTodos}
+            onClick={() => setMostrarTodos((v) => !v)}
+          />
+        )}
       </div>
 
       {/* Tabela -- só no desktop */}
@@ -243,9 +253,11 @@ function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
   const [status, setStatus] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [concluindo, setConcluindo] = useState(null)
+  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   const carregar = useCallback(async () => {
     setCarregando(true)
+    setMostrarTodos(false)
     try {
       const dados = await listarPreventivas({ maquina_id: maquinaId || undefined, status })
       setPreventivas(dados)
@@ -276,21 +288,69 @@ function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:flex-wrap">
           <FiltroSelect label="Máquina" value={maquinaId} onChange={setMaquinaId}
             opcoes={maquinas.map((m) => ({ value: m.id, label: m.codigo }))} />
           <FiltroSelect label="Status" value={status} onChange={setStatus} opcoes={STATUS_PREVENTIVA} />
         </div>
         <button
           onClick={() => setModalAberto(true)}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark shrink-0"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-primary-dark w-full sm:w-auto shrink-0"
         >
           <Plus size={16} /> Novo Plano
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+      {/* Cartões -- só no mobile, um registro por bloco com o essencial */}
+      <div className="md:hidden space-y-3">
+        {carregando && <p className="text-center py-8 text-gray-400 text-sm">Carregando...</p>}
+        {!carregando && preventivas.length === 0 && (
+          <p className="text-center py-8 text-gray-400 text-sm">Nenhum plano de preventiva cadastrado.</p>
+        )}
+        {!carregando && (mostrarTodos ? preventivas : preventivas.slice(0, 3)).map((p) => (
+          <div key={p.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">{p.maquina_codigo}</p>
+                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-1 ${BADGE_STATUS_PREVENTIVA[p.status_calculado]}`}>
+                  {labelStatusPreventiva(p.status_calculado)}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400 shrink-0 text-right">
+                {p.proxima_data ? formatarData(p.proxima_data) : '—'}
+              </span>
+            </div>
+            {p.descricao && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{p.descricao}</p>}
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-400">
+                {p.proximo_horimetro != null ? `${p.proximo_horimetro}h` : p.proximo_km != null ? `${p.proximo_km}km` : 'Sem meta de leitura'}
+              </span>
+              <div className="flex gap-4">
+                <button onClick={() => setConcluindo(p)} className="text-gray-400 hover:text-green-600 p-1" title="Concluir">
+                  <CheckCircle2 size={17} />
+                </button>
+                {isAdmin && (
+                  <button onClick={() => excluir(p)} className="text-gray-400 hover:text-red-600 p-1">
+                    <Trash2 size={17} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {!carregando && preventivas.length > 3 && (
+          <BotaoVerMais
+            mostrando={mostrarTodos ? preventivas.length : Math.min(3, preventivas.length)}
+            total={preventivas.length}
+            expandido={mostrarTodos}
+            onClick={() => setMostrarTodos((v) => !v)}
+          />
+        )}
+      </div>
+
+      {/* Tabela -- só no desktop */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
@@ -368,6 +428,18 @@ function FiltroSelect({ label, value, onChange, opcoes }) {
         ))}
       </select>
     </label>
+  )
+}
+
+// Mostra só os 3 registros mais recentes por padrão, com botão para expandir/recolher o resto.
+function BotaoVerMais({ expandido, onClick, total }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-center text-sm font-medium text-primary py-2.5 hover:bg-indigo-50 rounded-lg"
+    >
+      {expandido ? 'Ver menos' : `Ver mais (${total - 3} restante${total - 3 > 1 ? 's' : ''})`}
+    </button>
   )
 }
 

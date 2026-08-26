@@ -34,6 +34,7 @@ export default function Abastecimentos() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [consumo, setConsumo] = useState(null)
+  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   // Atalho rápido do Dashboard ("Novo Abastecimento") já abre o formulário direto
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function Abastecimentos() {
 
   const carregar = useCallback(async () => {
     setCarregando(true)
+    setMostrarTodos(false)
     try {
       const dados = await listarAbastecimentos({
         maquina_id: maquinaId || undefined,
@@ -149,7 +151,7 @@ export default function Abastecimentos() {
         {!carregando && abastecimentos.length === 0 && (
           <p className="text-center py-8 text-gray-400 text-sm">Nenhum abastecimento encontrado.</p>
         )}
-        {!carregando && abastecimentos.map((a) => (
+        {!carregando && (mostrarTodos ? abastecimentos : abastecimentos.slice(0, 3)).map((a) => (
           <div key={a.id} className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -179,6 +181,13 @@ export default function Abastecimentos() {
             </div>
           </div>
         ))}
+        {!carregando && abastecimentos.length > 3 && (
+          <BotaoVerMais
+            expandido={mostrarTodos}
+            onClick={() => setMostrarTodos((v) => !v)}
+            total={abastecimentos.length}
+          />
+        )}
       </div>
 
       {/* Tabela -- só no desktop */}
@@ -229,6 +238,18 @@ export default function Abastecimentos() {
         />
       )}
     </div>
+  )
+}
+
+// Mostra só os 3 registros mais recentes por padrão, com botão para expandir/recolher o resto.
+function BotaoVerMais({ expandido, onClick, total }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-center text-sm font-medium text-primary py-2.5 hover:bg-indigo-50 rounded-lg"
+    >
+      {expandido ? 'Ver menos' : `Ver mais (${total - 3} restante${total - 3 > 1 ? 's' : ''})`}
+    </button>
   )
 }
 

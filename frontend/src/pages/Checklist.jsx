@@ -20,6 +20,7 @@ export default function Checklist() {
 
   const [modalModelo, setModalModelo] = useState(false)
   const [executando, setExecutando] = useState(null) // { maquina, modelo }
+  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   useEffect(() => {
     // lista completa: usada no filtro (permite ver histórico de máquinas inativas/baixadas)
@@ -31,6 +32,7 @@ export default function Checklist() {
 
   const carregar = useCallback(async () => {
     setCarregando(true)
+    setMostrarTodos(false)
     try {
       const dados = await listarExecucoes({ maquina_id: maquinaId || undefined, apenas_com_pendencia: apenasPendencia })
       setExecucoes(dados)
@@ -108,7 +110,7 @@ export default function Checklist() {
         {!carregando && execucoes.length === 0 && (
           <p className="text-center py-8 text-gray-400 text-sm">Nenhum checklist registrado ainda.</p>
         )}
-        {!carregando && execucoes.map((e) => (
+        {!carregando && (mostrarTodos ? execucoes : execucoes.slice(0, 3)).map((e) => (
           <div key={e.id} className="bg-white border border-gray-200 rounded-xl p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -131,6 +133,13 @@ export default function Checklist() {
             </div>
           </div>
         ))}
+        {!carregando && execucoes.length > 3 && (
+          <BotaoVerMais
+            expandido={mostrarTodos}
+            onClick={() => setMostrarTodos((v) => !v)}
+            total={execucoes.length}
+          />
+        )}
       </div>
 
       {/* Tabela -- só no desktop */}
@@ -182,6 +191,18 @@ export default function Checklist() {
         />
       )}
     </div>
+  )
+}
+
+// Mostra só os 3 registros mais recentes por padrão, com botão para expandir/recolher o resto.
+function BotaoVerMais({ expandido, onClick, total }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-center text-sm font-medium text-primary py-2.5 hover:bg-indigo-50 rounded-lg"
+    >
+      {expandido ? 'Ver menos' : `Ver mais (${total - 3} restante${total - 3 > 1 ? 's' : ''})`}
+    </button>
   )
 }
 
