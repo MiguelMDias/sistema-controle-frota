@@ -90,8 +90,12 @@ export default function Usuarios() {
                 <td className="px-4 py-3 font-medium text-gray-700">{u.nome}</td>
                 <td className="px-4 py-3">{u.usuario}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.papel === 'admin' ? 'bg-indigo-100 text-primary' : 'bg-gray-100 text-gray-600'}`}>
-                    {u.papel === 'admin' ? 'Administrador' : 'Operador'}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    u.papel === 'admin' ? 'bg-indigo-100 text-primary' :
+                    u.papel === 'diretor' ? 'bg-amber-100 text-amber-700' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {u.papel === 'admin' ? 'Administrador' : u.papel === 'diretor' ? 'Diretor' : 'Mecânico'}
                   </span>
                 </td>
                 <td className="px-4 py-3">

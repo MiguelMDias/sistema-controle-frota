@@ -33,7 +33,25 @@ def obter_usuario_atual(authorization: Optional[str] = Header(None)) -> UsuarioL
 
 
 def exigir_admin(usuario: UsuarioLogado = Depends(obter_usuario_atual)) -> UsuarioLogado:
-    """Dependency para rotas que só o papel 'admin' pode executar (ex: exclusões)."""
+    """Dependency para rotas que só o papel 'admin' pode executar (ex: exclusões, gestão de usuários)."""
     if usuario.papel != "admin":
         raise HTTPException(status_code=403, detail="Apenas administradores podem realizar esta ação")
+    return usuario
+
+
+def exigir_operacional(usuario: UsuarioLogado = Depends(obter_usuario_atual)) -> UsuarioLogado:
+    """
+    Dependency para rotas de lançamento operacional (manutenção, abastecimento,
+    nota fiscal, checklist, fornecedor). O papel 'diretor' é somente leitura
+    -- não pode criar nem editar nada no sistema.
+    """
+    if usuario.papel == "diretor":
+        raise HTTPException(status_code=403, detail="Diretores têm acesso somente para visualização")
+    return usuario
+
+
+def exigir_admin_ou_diretor(usuario: UsuarioLogado = Depends(obter_usuario_atual)) -> UsuarioLogado:
+    """Dependency para módulos de gestão (Financeiro) -- admin e diretor têm acesso, mecânico não."""
+    if usuario.papel not in ("admin", "diretor"):
+        raise HTTPException(status_code=403, detail="Apenas administradores e diretores podem acessar este módulo")
     return usuario

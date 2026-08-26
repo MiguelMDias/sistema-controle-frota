@@ -3,9 +3,10 @@ import { Search, Plus, Pencil, Trash2 } from 'lucide-react'
 import { api } from '../services/api'
 import FornecedorModal from '../components/FornecedorModal'
 import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 export default function Fornecedores() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isDiretor } = useAuth()
   const [fornecedores, setFornecedores] = useState([])
   const [busca, setBusca] = useState('')
   const [carregando, setCarregando] = useState(true)
@@ -57,6 +58,8 @@ export default function Fornecedores() {
     await api.delete(`/fornecedores/${fornecedor.id}`)
     carregar()
   }
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>

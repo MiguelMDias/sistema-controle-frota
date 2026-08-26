@@ -63,7 +63,7 @@ class RegistroPayload(BaseModel):
 @router.post("/registrar", response_model=LoginResponse, status_code=201)
 def registrar(payload: RegistroPayload):
     """
-    Cadastro público de novo usuário. Sempre criado com papel 'operador',
+    Cadastro público de novo usuário. Sempre criado com papel 'mecanico',
     independente do que for enviado -- só um administrador pode promover
     alguém a admin depois, pela tela de Usuários.
     Já retorna o token de login, pra entrar direto após se cadastrar.
@@ -78,7 +78,7 @@ def registrar(payload: RegistroPayload):
         "nome": payload.nome,
         "usuario": payload.usuario,
         "senha_hash": hash_senha(payload.senha),
-        "papel": "operador",
+        "papel": "mecanico",
     }
     resp = sb.table("usuarios").insert(dados).execute()
     criado = resp.data[0]

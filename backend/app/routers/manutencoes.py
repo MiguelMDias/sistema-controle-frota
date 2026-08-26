@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
@@ -54,7 +54,7 @@ def obter_manutencao(manutencao_id: int):
 
 
 @router.post("", response_model=Manutencao, status_code=201)
-def criar_manutencao(manutencao: ManutencaoCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_manutencao(manutencao: ManutencaoCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(manutencao.maquina_id)
@@ -73,7 +73,7 @@ def criar_manutencao(manutencao: ManutencaoCreate, usuario: UsuarioLogado = Depe
 
 
 @router.patch("/{manutencao_id}", response_model=Manutencao)
-def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def atualizar_manutencao(manutencao_id: int, manutencao: ManutencaoUpdate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     dados = manutencao.model_dump(mode="json", exclude_unset=True)
     if not dados:

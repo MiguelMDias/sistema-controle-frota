@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
@@ -29,7 +29,7 @@ def listar_modelos(tipo_maquina: Optional[str] = None):
 
 
 @router.post("/modelos", response_model=ChecklistModelo, status_code=201)
-def criar_modelo(modelo: ChecklistModeloCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_modelo(modelo: ChecklistModeloCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     dados = modelo.model_dump(mode="json")
     resp = sb.table("checklist_modelos").insert(dados).execute()
@@ -76,7 +76,7 @@ def listar_execucoes(
 
 
 @router.post("/execucoes", response_model=ChecklistExecucao, status_code=201)
-def registrar_execucao(execucao: ChecklistExecucaoCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def registrar_execucao(execucao: ChecklistExecucaoCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(execucao.maquina_id)

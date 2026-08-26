@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.auth_deps import obter_usuario_atual
+from app.auth_deps import obter_usuario_atual, exigir_admin_ou_diretor
 from app.routers import (
     auth,
     usuarios,
@@ -57,7 +57,7 @@ app.include_router(notas_fiscais.router, dependencies=_protegido)
 app.include_router(checklist.router, dependencies=_protegido)
 app.include_router(dashboard.router, dependencies=_protegido)
 app.include_router(relatorios.router, dependencies=_protegido)
-app.include_router(financeiro.router, dependencies=_protegido)
+app.include_router(financeiro.router, dependencies=[Depends(obter_usuario_atual), Depends(exigir_admin_ou_diretor)])
 app.include_router(logs.router, dependencies=_protegido)
 
 

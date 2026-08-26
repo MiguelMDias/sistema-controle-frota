@@ -15,9 +15,10 @@ import {
 } from '../services/abastecimentos'
 import AbastecimentoModal from '../components/AbastecimentoModal'
 import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 export default function Abastecimentos() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isDiretor } = useAuth()
   const location = useLocation()
   const [abastecimentos, setAbastecimentos] = useState([])
   const [maquinas, setMaquinas] = useState([])
@@ -91,6 +92,8 @@ export default function Abastecimentos() {
   }
 
   const totalPeriodo = abastecimentos.reduce((soma, a) => soma + (a.valor_total || 0), 0)
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>

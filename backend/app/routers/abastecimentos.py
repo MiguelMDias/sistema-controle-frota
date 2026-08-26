@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
@@ -47,7 +47,7 @@ def listar_abastecimentos(
 
 
 @router.post("", response_model=Abastecimento, status_code=201)
-def criar_abastecimento(abastecimento: AbastecimentoCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_abastecimento(abastecimento: AbastecimentoCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(abastecimento.maquina_id)
@@ -61,7 +61,7 @@ def criar_abastecimento(abastecimento: AbastecimentoCreate, usuario: UsuarioLoga
 
 
 @router.patch("/{abastecimento_id}", response_model=Abastecimento)
-def atualizar_abastecimento(abastecimento_id: int, abastecimento: AbastecimentoUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def atualizar_abastecimento(abastecimento_id: int, abastecimento: AbastecimentoUpdate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     dados = abastecimento.model_dump(mode="json", exclude_unset=True)
     if not dados:

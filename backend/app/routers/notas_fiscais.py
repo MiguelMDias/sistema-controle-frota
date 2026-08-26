@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
@@ -101,7 +101,7 @@ def _validar_referencias(sb, nota) -> None:
 
 
 @router.post("", response_model=NotaFiscal, status_code=201)
-def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     _validar_referencias(sb, nota)
@@ -127,7 +127,7 @@ def criar_nota_fiscal(nota: NotaFiscalCreate, usuario: UsuarioLogado = Depends(o
 
 
 @router.patch("/{nota_id}", response_model=NotaFiscal)
-def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def atualizar_nota_fiscal(nota_id: int, nota: NotaFiscalUpdate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     existente = sb.table("notas_fiscais").select("*").eq("id", nota_id).execute()
@@ -260,7 +260,7 @@ def _extrair_nfe(xml_bytes: bytes) -> dict:
 
 
 @router.post("/importar-xml")
-def importar_xml_nfe(arquivo: UploadFile = File(...), usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def importar_xml_nfe(arquivo: UploadFile = File(...), usuario: UsuarioLogado = Depends(exigir_operacional)):
     """
     Lê um XML de NF-e e devolve os campos já preenchidos (número, série, data,
     valor total, itens e fornecedor) para revisão antes de salvar. Se o

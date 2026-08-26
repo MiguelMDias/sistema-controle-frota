@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -9,6 +9,8 @@ from app.auditoria import registrar_log
 from app.database import get_supabase
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
+
+Papel = Literal["admin", "mecanico", "diretor"]
 
 
 class UsuarioOut(BaseModel):
@@ -23,12 +25,12 @@ class UsuarioCreate(BaseModel):
     nome: str
     usuario: str
     senha: str
-    papel: str = "operador"
+    papel: Papel = "mecanico"
 
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
-    papel: Optional[str] = None
+    papel: Optional[Papel] = None
     ativo: Optional[bool] = None
     senha: Optional[str] = None  # se enviado, troca a senha
 

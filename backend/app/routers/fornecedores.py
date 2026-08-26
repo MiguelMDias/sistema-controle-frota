@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.schemas.fornecedores import Fornecedor, FornecedorCreate, FornecedorUpdate
@@ -21,7 +21,7 @@ def listar_fornecedores(busca: Optional[str] = Query(None, description="Busca po
 
 
 @router.post("", response_model=Fornecedor, status_code=201)
-def criar_fornecedor(fornecedor: FornecedorCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_fornecedor(fornecedor: FornecedorCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     existe = sb.table("fornecedores").select("id").eq("cnpj", fornecedor.cnpj).execute()
     if existe.data:
@@ -33,7 +33,7 @@ def criar_fornecedor(fornecedor: FornecedorCreate, usuario: UsuarioLogado = Depe
 
 
 @router.patch("/{fornecedor_id}", response_model=Fornecedor)
-def atualizar_fornecedor(fornecedor_id: int, fornecedor: FornecedorUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def atualizar_fornecedor(fornecedor_id: int, fornecedor: FornecedorUpdate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     dados = fornecedor.model_dump(mode="json", exclude_unset=True)
     if not dados:

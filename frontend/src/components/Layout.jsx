@@ -20,15 +20,22 @@ import { useAuth } from '../services/auth'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/maquinas', label: 'Máquinas', icon: Truck },
-  { to: '/manutencoes', label: 'Manutenções', icon: Wrench },
-  { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel },
-  { to: '/fornecedores', label: 'Fornecedores', icon: Briefcase },
-  { to: '/notas-fiscais', label: 'Notas Fiscais', icon: FileText },
-  { to: '/checklist', label: 'Checklist', icon: CheckSquare },
-  { to: '/financeiro', label: 'Financeiro', icon: Wallet },
+  { to: '/maquinas', label: 'Máquinas', icon: Truck, ocultarPara: ['diretor'] },
+  { to: '/manutencoes', label: 'Manutenções', icon: Wrench, ocultarPara: ['diretor'] },
+  { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel, ocultarPara: ['diretor'] },
+  { to: '/fornecedores', label: 'Fornecedores', icon: Briefcase, ocultarPara: ['diretor'] },
+  { to: '/notas-fiscais', label: 'Notas Fiscais', icon: FileText, ocultarPara: ['diretor'] },
+  { to: '/checklist', label: 'Checklist', icon: CheckSquare, ocultarPara: ['diretor'] },
+  { to: '/financeiro', label: 'Financeiro', icon: Wallet, ocultarPara: ['mecanico'] },
   { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
 ]
+
+const LABEL_PAPEL = {
+  admin: 'Administrador',
+  mecanico: 'Mecânico',
+  diretor: 'Diretor',
+  observador: 'Observador',
+}
 
 function itemClasse({ isActive }) {
   return `flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg text-sm transition-colors ${
@@ -40,6 +47,11 @@ export default function Layout() {
   const { auth, logout, isAdmin, isObservador } = useAuth()
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
+
+  // Observador (modo demo) vê tudo; os demais papéis têm módulos ocultados conforme a permissão.
+  const itensVisiveis = NAV_ITEMS.filter(
+    (item) => isObservador || !item.ocultarPara?.includes(auth?.papel)
+  )
 
   function handleLogout() {
     logout()
@@ -76,7 +88,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {itensVisiveis.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} onClick={fecharMenu} className={itemClasse}>
               <Icon size={18} />
               {label}
@@ -101,7 +113,7 @@ export default function Layout() {
           <div className="px-3 py-2 mb-1">
             <p className="text-sm font-medium text-gray-700 truncate">{auth?.nome}</p>
             <p className="text-xs text-gray-400">
-              {auth?.papel === 'admin' ? 'Administrador' : auth?.papel === 'observador' ? 'Observador' : 'Operador'}
+              {LABEL_PAPEL[auth?.papel] || auth?.papel}
             </p>
           </div>
           <button

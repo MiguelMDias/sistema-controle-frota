@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.auth_deps import exigir_admin, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento
@@ -93,7 +93,7 @@ def listar_preventivas(
 
 
 @router.post("", response_model=PlanoPreventiva, status_code=201)
-def criar_preventiva(plano: PlanoPreventivaCreate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def criar_preventiva(plano: PlanoPreventivaCreate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
 
     validar_maquina_permite_lancamento(plano.maquina_id)
@@ -118,7 +118,7 @@ def criar_preventiva(plano: PlanoPreventivaCreate, usuario: UsuarioLogado = Depe
 
 
 @router.patch("/{plano_id}", response_model=PlanoPreventiva)
-def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def atualizar_preventiva(plano_id: int, plano: PlanoPreventivaUpdate, usuario: UsuarioLogado = Depends(exigir_operacional)):
     sb = get_supabase()
     dados = plano.model_dump(mode="json", exclude_unset=True)
     if not dados:
@@ -160,7 +160,7 @@ class ConcluirPreventivaPayload(BaseModel):
 
 
 @router.post("/{plano_id}/concluir", response_model=PlanoPreventiva)
-def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload, usuario: UsuarioLogado = Depends(obter_usuario_atual)):
+def concluir_preventiva(plano_id: int, payload: ConcluirPreventivaPayload, usuario: UsuarioLogado = Depends(exigir_operacional)):
     """
     Registra a execução da preventiva: cria o registro em `manutencoes` (histórico)
     e já recalcula a próxima data/horímetro/km do plano a partir dessa execução.

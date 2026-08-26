@@ -15,9 +15,10 @@ import {
 import NotaFiscalModal from '../components/NotaFiscalModal'
 import NotaFiscalDetalheModal from '../components/NotaFiscalDetalheModal'
 import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 export default function NotasFiscais() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isDiretor } = useAuth()
   const location = useLocation()
   const [notas, setNotas] = useState([])
   const [maquinas, setMaquinas] = useState([])
@@ -101,6 +102,8 @@ export default function NotasFiscais() {
   }
 
   const total = notas.reduce((soma, n) => soma + (n.valor_total || 0), 0)
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>

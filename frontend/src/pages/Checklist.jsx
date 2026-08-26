@@ -4,8 +4,11 @@ import { listarMaquinas } from '../services/maquinas'
 import { listarModelos, criarModelo, listarExecucoes, registrarExecucao } from '../services/checklist'
 import ModeloChecklistModal from '../components/ModeloChecklistModal'
 import ExecutarChecklistModal from '../components/ExecutarChecklistModal'
+import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 export default function Checklist() {
+  const { isDiretor } = useAuth()
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [modelos, setModelos] = useState([])
@@ -58,6 +61,8 @@ export default function Checklist() {
     }
     setExecutando({ maquina, modelo: modeloDaMaquina })
   }
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>

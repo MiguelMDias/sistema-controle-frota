@@ -18,6 +18,8 @@ import {
 } from '../services/manutencoes'
 import ManutencaoModal from '../components/ManutencaoModal'
 import PreventivaModal from '../components/PreventivaModal'
+import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 import ConcluirPreventivaModal from '../components/ConcluirPreventivaModal'
 import { useAuth } from '../services/auth'
 
@@ -28,6 +30,7 @@ const BADGE_STATUS_PREVENTIVA = {
 }
 
 export default function Manutencoes() {
+  const { isDiretor } = useAuth()
   const location = useLocation()
   const abrirNovoAoMontar = Boolean(location.state?.abrirNovo)
   const [aba, setAba] = useState('manutencoes')
@@ -50,6 +53,8 @@ export default function Manutencoes() {
     listarMaquinas({ apenas_disponiveis: true }).then(setMaquinasDisponiveis).catch(() => {})
     api.get('/fornecedores').then((r) => setFornecedores(r.data)).catch(() => {})
   }, [])
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>

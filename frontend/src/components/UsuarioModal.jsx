@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
-const VAZIO = { nome: '', usuario: '', senha: '', papel: 'operador', ativo: true }
+const VAZIO = { nome: '', usuario: '', senha: '', papel: 'mecanico', ativo: true }
 
 export default function UsuarioModal({ usuario, onClose, onSave }) {
   const [form, setForm] = useState(VAZIO)
@@ -99,7 +99,8 @@ export default function UsuarioModal({ usuario, onClose, onSave }) {
                 onChange={(e) => atualizarCampo('papel', e.target.value)}
                 className="input"
               >
-                <option value="operador">Operador</option>
+                <option value="mecanico">Mecânico</option>
+                <option value="diretor">Diretor</option>
                 <option value="admin">Administrador</option>
               </select>
             </label>

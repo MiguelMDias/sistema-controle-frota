@@ -12,6 +12,7 @@ import {
 } from '../services/maquinas'
 import MaquinaModal from '../components/MaquinaModal'
 import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 const BADGE_SITUACAO = {
   ativa: 'bg-green-100 text-green-700',
@@ -21,7 +22,7 @@ const BADGE_SITUACAO = {
 }
 
 export default function Maquinas() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isDiretor } = useAuth()
   const [maquinas, setMaquinas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -97,6 +98,8 @@ export default function Maquinas() {
       alert(err.response?.data?.detail || 'Não foi possível excluir permanentemente esta máquina.')
     }
   }
+
+  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
 
   return (
     <div>
