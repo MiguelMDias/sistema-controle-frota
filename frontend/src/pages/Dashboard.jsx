@@ -23,7 +23,7 @@ const BADGE_SEVERIDADE = {
 }
 
 export default function Dashboard() {
-  const { isMecanico } = useAuth()
+  const { isMecanico, isDiretor } = useAuth()
   const navigate = useNavigate()
   const [resumo, setResumo] = useState(null)
   const [custosPorMes, setCustosPorMes] = useState([])
@@ -76,12 +76,15 @@ export default function Dashboard() {
       {carregando && <p className="text-gray-400">Carregando...</p>}
 
       {/* ---------- Atalhos rápidos ---------- */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <AtalhoRapido icone={Wrench} label="Nova Manutenção" onClick={() => irComAtalho('/manutencoes')} />
-        <AtalhoRapido icone={Fuel} label="Novo Abastecimento" onClick={() => irComAtalho('/abastecimentos')} />
-        <AtalhoRapido icone={FileText} label="Nova Nota Fiscal" onClick={() => irComAtalho('/notas-fiscais')} />
-        <AtalhoRapido icone={ClipboardCheck} label="Executar Checklist" onClick={() => navigate('/checklist')} />
-      </div>
+      {/* Diretor tem acesso só de visualização -- não faz sentido oferecer atalhos de criação */}
+      {!isDiretor && (
+        <div className="flex flex-wrap gap-3 mb-6">
+          <AtalhoRapido icone={Wrench} label="Nova Manutenção" onClick={() => irComAtalho('/manutencoes')} />
+          <AtalhoRapido icone={Fuel} label="Novo Abastecimento" onClick={() => irComAtalho('/abastecimentos')} />
+          <AtalhoRapido icone={FileText} label="Nova Nota Fiscal" onClick={() => irComAtalho('/notas-fiscais')} />
+          <AtalhoRapido icone={ClipboardCheck} label="Executar Checklist" onClick={() => navigate('/checklist')} />
+        </div>
+      )}
 
       {/* ---------- Cards de resumo ---------- */}
       {resumo && (
