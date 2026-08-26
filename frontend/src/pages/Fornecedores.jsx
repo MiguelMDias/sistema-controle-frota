@@ -6,7 +6,7 @@ import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
 
 export default function Fornecedores() {
-  const { isAdmin, isDiretor } = useAuth()
+  const { isAdmin, isDiretor, isMecanico } = useAuth()
   const [fornecedores, setFornecedores] = useState([])
   const [busca, setBusca] = useState('')
   const [carregando, setCarregando] = useState(true)
@@ -59,7 +59,7 @@ export default function Fornecedores() {
     carregar()
   }
 
-  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
+  if (isDiretor || isMecanico) return <AcessoNegado mensagem="Você não tem permissão para acessar este módulo." />
 
   return (
     <div>

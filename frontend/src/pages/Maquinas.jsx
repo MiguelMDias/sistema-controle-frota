@@ -22,7 +22,7 @@ const BADGE_SITUACAO = {
 }
 
 export default function Maquinas() {
-  const { isAdmin, isDiretor } = useAuth()
+  const { isAdmin, isDiretor, isMecanico } = useAuth()
   const [maquinas, setMaquinas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -99,7 +99,7 @@ export default function Maquinas() {
     }
   }
 
-  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
+  if (isDiretor || isMecanico) return <AcessoNegado mensagem="Você não tem permissão para acessar este módulo." />
 
   return (
     <div>

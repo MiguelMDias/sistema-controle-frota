@@ -18,7 +18,7 @@ import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
 
 export default function NotasFiscais() {
-  const { isAdmin, isDiretor } = useAuth()
+  const { isAdmin, isDiretor, isMecanico } = useAuth()
   const location = useLocation()
   const [notas, setNotas] = useState([])
   const [maquinas, setMaquinas] = useState([])
@@ -103,7 +103,7 @@ export default function NotasFiscais() {
 
   const total = notas.reduce((soma, n) => soma + (n.valor_total || 0), 0)
 
-  if (isDiretor) return <AcessoNegado mensagem="Diretores têm acesso somente ao Dashboard, Financeiro e Relatórios." />
+  if (isDiretor || isMecanico) return <AcessoNegado mensagem="Você não tem permissão para acessar este módulo." />
 
   return (
     <div>

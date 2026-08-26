@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { FileDown, FileSpreadsheet } from 'lucide-react'
 import { listarMaquinas, listarCentrosDespesa } from '../services/maquinas'
 import { api } from '../services/api'
+import { useAuth } from '../services/auth'
+import AcessoNegado from '../components/AcessoNegado'
 
 export default function Relatorios() {
+  const { isMecanico } = useAuth()
   const [maquinas, setMaquinas] = useState([])
   const [centrosDespesa, setCentrosDespesa] = useState([])
 
@@ -11,6 +14,8 @@ export default function Relatorios() {
     listarMaquinas().then(setMaquinas).catch(() => {})
     listarCentrosDespesa().then(setCentrosDespesa).catch(() => {})
   }, [])
+
+  if (isMecanico) return <AcessoNegado mensagem="Você não tem permissão para acessar este módulo." />
 
   return (
     <div>

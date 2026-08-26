@@ -19,15 +19,15 @@ import {
 import { useAuth } from '../services/auth'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/maquinas', label: 'Máquinas', icon: Truck, ocultarPara: ['diretor'] },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, ocultarPara: ['mecanico'] },
+  { to: '/maquinas', label: 'Máquinas', icon: Truck, ocultarPara: ['diretor', 'mecanico'] },
   { to: '/manutencoes', label: 'Manutenções', icon: Wrench, ocultarPara: ['diretor'] },
   { to: '/abastecimentos', label: 'Abastecimentos', icon: Fuel, ocultarPara: ['diretor'] },
-  { to: '/fornecedores', label: 'Fornecedores', icon: Briefcase, ocultarPara: ['diretor'] },
-  { to: '/notas-fiscais', label: 'Notas Fiscais', icon: FileText, ocultarPara: ['diretor'] },
+  { to: '/fornecedores', label: 'Fornecedores', icon: Briefcase, ocultarPara: ['diretor', 'mecanico'] },
+  { to: '/notas-fiscais', label: 'Notas Fiscais', icon: FileText, ocultarPara: ['diretor', 'mecanico'] },
   { to: '/checklist', label: 'Checklist', icon: CheckSquare, ocultarPara: ['diretor'] },
   { to: '/financeiro', label: 'Financeiro', icon: Wallet, ocultarPara: ['mecanico'] },
-  { to: '/relatorios', label: 'Relatórios', icon: BarChart3 },
+  { to: '/relatorios', label: 'Relatórios', icon: BarChart3, ocultarPara: ['mecanico'] },
 ]
 
 const LABEL_PAPEL = {

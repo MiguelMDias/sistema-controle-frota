@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import {
   Truck, CheckCircle2, Wrench, CalendarX, CalendarClock, DollarSign,
   AlertTriangle, Plus, Fuel, FileText, ClipboardCheck, ArrowRight,
@@ -9,6 +9,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from 'recharts'
 import { api } from '../services/api'
+import { useAuth } from '../services/auth'
 
 const NOMES_MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
@@ -22,6 +23,7 @@ const BADGE_SEVERIDADE = {
 }
 
 export default function Dashboard() {
+  const { isMecanico } = useAuth()
   const navigate = useNavigate()
   const [resumo, setResumo] = useState(null)
   const [custosPorMes, setCustosPorMes] = useState([])
@@ -59,6 +61,9 @@ export default function Dashboard() {
   function irComAtalho(rota) {
     navigate(rota, { state: { abrirNovo: true } })
   }
+
+  // Mecânico não vê o Dashboard -- vai direto para a área operacional dele
+  if (isMecanico) return <Navigate to="/manutencoes" replace />
 
   return (
     <div>
