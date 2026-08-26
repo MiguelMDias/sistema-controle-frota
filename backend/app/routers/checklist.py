@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth_deps import exigir_admin, exigir_operacional, obter_usuario_atual, UsuarioLogado
+from app.auth_deps import exigir_admin, exigir_operacional, UsuarioLogado
 from app.auditoria import registrar_log
 from app.database import get_supabase
 from app.maquina_guard import validar_maquina_permite_lancamento

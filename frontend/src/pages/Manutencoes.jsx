@@ -21,7 +21,6 @@ import PreventivaModal from '../components/PreventivaModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
 import ConcluirPreventivaModal from '../components/ConcluirPreventivaModal'
-import { useAuth } from '../services/auth'
 
 const BADGE_STATUS_PREVENTIVA = {
   vencida: 'bg-red-100 text-red-700',
