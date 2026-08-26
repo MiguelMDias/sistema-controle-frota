@@ -1,7 +1,7 @@
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.auth_deps import exigir_admin, UsuarioLogado
 from app.auth_utils import hash_senha
@@ -24,7 +24,7 @@ class UsuarioOut(BaseModel):
 class UsuarioCreate(BaseModel):
     nome: str
     usuario: str
-    senha: str
+    senha: str = Field(..., min_length=6, description="Mínimo 6 caracteres")
     papel: Papel = "mecanico"
 
 
@@ -32,7 +32,7 @@ class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     papel: Optional[Papel] = None
     ativo: Optional[bool] = None
-    senha: Optional[str] = None  # se enviado, troca a senha
+    senha: Optional[str] = Field(None, min_length=6, description="Se enviado, troca a senha (mínimo 6 caracteres)")
 
 
 @router.get("", response_model=list[UsuarioOut])

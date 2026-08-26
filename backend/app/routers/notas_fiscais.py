@@ -1,5 +1,6 @@
 import re
 import xml.etree.ElementTree as ET
+from defusedxml.ElementTree import fromstring as fromstring_seguro
 from datetime import date
 from typing import Optional
 
@@ -192,9 +193,13 @@ def _extrair_nfe(xml_bytes: bytes) -> dict:
     Lança HTTPException(422) com mensagem específica se o XML não for reconhecido.
     """
     try:
-        root = ET.fromstring(xml_bytes)
+        root = fromstring_seguro(xml_bytes)
     except ET.ParseError as exc:
         raise HTTPException(status_code=422, detail=f"Arquivo XML inválido ou corrompido: {exc}")
+    except Exception as exc:
+        # defusedxml lança sua própria exceção quando detecta um XML malicioso
+        # (entidades expandindo demais, referências externas, etc)
+        raise HTTPException(status_code=422, detail="Arquivo XML rejeitado por motivo de segurança.")
 
     inf_nfe = root.find(".//nfe:infNFe", NFE_NS)
     if inf_nfe is None:
@@ -270,7 +275,11 @@ def importar_xml_nfe(arquivo: UploadFile = File(...), usuario: UsuarioLogado = D
     if not arquivo.filename.lower().endswith(".xml"):
         raise HTTPException(status_code=422, detail="Envie um arquivo .xml de NF-e.")
 
-    conteudo = arquivo.file.read()
+    TAMANHO_MAXIMO = 2 * 1024 * 1024  # 2MB -- uma NF-e real tem no máximo algumas centenas de KB
+    conteudo = arquivo.file.read(TAMANHO_MAXIMO + 1)
+    if len(conteudo) > TAMANHO_MAXIMO:
+        raise HTTPException(status_code=413, detail="Arquivo XML muito grande (máximo 2MB).")
+
     dados = _extrair_nfe(conteudo)
 
     sb = get_supabase()
