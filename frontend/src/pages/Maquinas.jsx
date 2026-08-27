@@ -13,6 +13,7 @@ import {
 import MaquinaModal from '../components/MaquinaModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 
 const BADGE_SITUACAO = {
   ativa: 'bg-green-100 text-green-700',
@@ -23,6 +24,7 @@ const BADGE_SITUACAO = {
 
 export default function Maquinas() {
   const { isAdmin, isDiretor, isMecanico } = useAuth()
+  const { confirmar, alertar } = useDialogo()
   const [maquinas, setMaquinas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -79,23 +81,34 @@ export default function Maquinas() {
   }
 
   async function excluir(maquina) {
-    if (!confirm(`Marcar a máquina ${maquina.codigo} como inativa? O histórico vinculado será preservado.`)) return
+    const ok = await confirmar({
+      titulo: 'Marcar máquina como inativa',
+      mensagem: `A máquina ${maquina.codigo} vai deixar de aparecer nos lançamentos, mas o histórico dela (manutenções, abastecimentos, notas) continua guardado.`,
+      textoConfirmar: 'Marcar como inativa',
+      perigo: true,
+    })
+    if (!ok) return
     await excluirMaquina(maquina.id)
     carregar()
   }
 
   async function excluirPermanente(maquina) {
-    if (
-      !confirm(
-        `Excluir PERMANENTEMENTE a máquina ${maquina.codigo}? Essa ação remove o registro do banco de dados e não pode ser desfeita. Use apenas para dados de teste.`
-      )
-    )
-      return
+    const ok = await confirmar({
+      titulo: 'Excluir permanentemente',
+      mensagem: `Isso remove a máquina ${maquina.codigo} do banco de dados de vez -- não tem como desfazer. Use só para apagar dados de teste.`,
+      textoConfirmar: 'Excluir para sempre',
+      perigo: true,
+    })
+    if (!ok) return
     try {
       await excluirMaquinaPermanente(maquina.id)
       carregar()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Não foi possível excluir permanentemente esta máquina.')
+      await alertar({
+        titulo: 'Não foi possível excluir',
+        mensagem: err.response?.data?.detail || 'Não foi possível excluir permanentemente esta máquina.',
+        perigo: true,
+      })
     }
   }
 

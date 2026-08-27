@@ -3,9 +3,11 @@ import { Plus, Pencil, Trash2, ShieldAlert } from 'lucide-react'
 import { api } from '../services/api'
 import { useAuth } from '../services/auth'
 import UsuarioModal from '../components/UsuarioModal'
+import { useDialogo } from '../components/DialogoProvider'
 
 export default function Usuarios() {
   const { isAdmin, auth } = useAuth()
+  const { confirmar, alertar } = useDialogo()
   const [usuarios, setUsuarios] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -47,12 +49,22 @@ export default function Usuarios() {
   }
 
   async function excluir(usuario) {
-    if (!confirm(`Excluir o usuário ${usuario.usuario}?`)) return
+    const ok = await confirmar({
+      titulo: 'Excluir usuário',
+      mensagem: `Quer mesmo excluir o usuário ${usuario.nome} (código ${usuario.usuario})? Ele não vai mais conseguir entrar no sistema.`,
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     try {
       await api.delete(`/usuarios/${usuario.id}`)
       carregar()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Erro ao excluir usuário')
+      await alertar({
+        titulo: 'Não foi possível excluir',
+        mensagem: err.response?.data?.detail || 'Erro ao excluir usuário',
+        perigo: true,
+      })
     }
   }
 

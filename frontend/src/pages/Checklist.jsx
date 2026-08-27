@@ -6,9 +6,11 @@ import ModeloChecklistModal from '../components/ModeloChecklistModal'
 import ExecutarChecklistModal from '../components/ExecutarChecklistModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 
 export default function Checklist() {
   const { isDiretor } = useAuth()
+  const { alertar } = useDialogo()
   const [maquinas, setMaquinas] = useState([])
   const [maquinasDisponiveis, setMaquinasDisponiveis] = useState([])
   const [modelos, setModelos] = useState([])
@@ -55,10 +57,13 @@ export default function Checklist() {
     carregar()
   }
 
-  function iniciarExecucao(maquina) {
+  async function iniciarExecucao(maquina) {
     const modeloDaMaquina = modelos.find((m) => m.tipo_maquina === maquina.tipo)
     if (!modeloDaMaquina) {
-      alert(`Não há modelo de checklist cadastrado para o tipo "${maquina.tipo}". Crie um modelo primeiro.`)
+      await alertar({
+        titulo: 'Ainda não há um modelo para esse tipo de máquina',
+        mensagem: `Cadastre um modelo de checklist para "${maquina.tipo}" antes de executar.`,
+      })
       return
     }
     setExecutando({ maquina, modelo: modeloDaMaquina })

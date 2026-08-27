@@ -16,9 +16,11 @@ import {
 import AbastecimentoModal from '../components/AbastecimentoModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 
 export default function Abastecimentos() {
   const { isAdmin, isDiretor } = useAuth()
+  const { confirmar } = useDialogo()
   const location = useLocation()
   const [abastecimentos, setAbastecimentos] = useState([])
   const [maquinas, setMaquinas] = useState([])
@@ -88,7 +90,13 @@ export default function Abastecimentos() {
   }
 
   async function excluir(a) {
-    if (!confirm('Excluir este abastecimento?')) return
+    const ok = await confirmar({
+      titulo: 'Excluir abastecimento',
+      mensagem: 'Quer mesmo excluir este abastecimento? Essa ação não pode ser desfeita.',
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     await excluirAbastecimento(a.id)
     carregar()
   }

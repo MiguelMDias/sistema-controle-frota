@@ -16,9 +16,11 @@ import NotaFiscalModal from '../components/NotaFiscalModal'
 import NotaFiscalDetalheModal from '../components/NotaFiscalDetalheModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 
 export default function NotasFiscais() {
   const { isAdmin, isDiretor, isMecanico } = useAuth()
+  const { confirmar } = useDialogo()
   const location = useLocation()
   const [notas, setNotas] = useState([])
   const [maquinas, setMaquinas] = useState([])
@@ -85,7 +87,13 @@ export default function NotasFiscais() {
   }
 
   async function excluir(n) {
-    if (!confirm(`Excluir a nota fiscal ${n.numero}?`)) return
+    const ok = await confirmar({
+      titulo: 'Excluir nota fiscal',
+      mensagem: `Quer mesmo excluir a nota ${n.numero}/${n.serie}? Essa ação não pode ser desfeita.`,
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     setErroAcao(null)
     try {
       await excluirNotaFiscal(n.id)

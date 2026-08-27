@@ -13,6 +13,7 @@ import {
 } from '../services/financeiro'
 import { listarCentrosDespesa, criarCentroDespesa } from '../services/maquinas'
 import { useAuth } from '../services/auth'
+import { useDialogo } from '../components/DialogoProvider'
 
 const HOJE = new Date()
 const INICIO_MES = new Date(HOJE.getFullYear(), HOJE.getMonth(), 1).toISOString().slice(0, 10)
@@ -110,6 +111,7 @@ function LinhaResumo({ label, valor, destaque }) {
 
 function AbaCentrosDespesa() {
   const { isAdmin } = useAuth()
+  const { confirmar } = useDialogo()
   const [centros, setCentros] = useState([])
   const [mostrarInativos, setMostrarInativos] = useState(false)
   const [carregando, setCarregando] = useState(true)
@@ -151,7 +153,13 @@ function AbaCentrosDespesa() {
 
   async function alternarSituacao(centro) {
     const acao = centro.ativo ? 'desativar' : 'ativar'
-    if (!confirm(`Deseja ${acao} o centro de despesa "${centro.nome}"?`)) return
+    const ok = await confirmar({
+      titulo: centro.ativo ? 'Desativar centro de despesa' : 'Ativar centro de despesa',
+      mensagem: `Quer mesmo ${acao} "${centro.nome}"?`,
+      textoConfirmar: centro.ativo ? 'Desativar' : 'Ativar',
+      perigo: centro.ativo,
+    })
+    if (!ok) return
     try {
       await alternarSituacaoCentroDespesa(centro.id, !centro.ativo)
       carregar()

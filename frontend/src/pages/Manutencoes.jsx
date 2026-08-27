@@ -20,6 +20,7 @@ import ManutencaoModal from '../components/ManutencaoModal'
 import PreventivaModal from '../components/PreventivaModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 import ConcluirPreventivaModal from '../components/ConcluirPreventivaModal'
 
 const BADGE_STATUS_PREVENTIVA = {
@@ -90,6 +91,7 @@ function AbaBotao({ label, ativa, onClick }) {
 
 function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMontar }) {
   const { isAdmin } = useAuth()
+  const { confirmar } = useDialogo()
   const [manutencoes, setManutencoes] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [maquinaId, setMaquinaId] = useState('')
@@ -125,7 +127,13 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
   }
 
   async function excluir(m) {
-    if (!confirm('Excluir este registro de manutenção?')) return
+    const ok = await confirmar({
+      titulo: 'Excluir manutenção',
+      mensagem: 'Quer mesmo excluir este registro de manutenção? Essa ação não pode ser desfeita.',
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     await excluirManutencao(m.id)
     carregar()
   }
@@ -247,6 +255,7 @@ function AbaManutencoes({ maquinas, maquinasDisponiveis, fornecedores, abrirAoMo
 
 function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
   const { isAdmin } = useAuth()
+  const { confirmar } = useDialogo()
   const [preventivas, setPreventivas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [maquinaId, setMaquinaId] = useState('')
@@ -275,7 +284,13 @@ function AbaPreventivas({ maquinas, maquinasDisponiveis, fornecedores }) {
   }
 
   async function excluir(p) {
-    if (!confirm('Excluir este plano de preventiva?')) return
+    const ok = await confirmar({
+      titulo: 'Excluir plano de preventiva',
+      mensagem: 'Quer mesmo excluir este plano de preventiva? Essa ação não pode ser desfeita.',
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     await excluirPreventiva(p.id)
     carregar()
   }

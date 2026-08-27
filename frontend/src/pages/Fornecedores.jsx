@@ -4,9 +4,11 @@ import { api } from '../services/api'
 import FornecedorModal from '../components/FornecedorModal'
 import { useAuth } from '../services/auth'
 import AcessoNegado from '../components/AcessoNegado'
+import { useDialogo } from '../components/DialogoProvider'
 
 export default function Fornecedores() {
   const { isAdmin, isDiretor, isMecanico } = useAuth()
+  const { confirmar } = useDialogo()
   const [fornecedores, setFornecedores] = useState([])
   const [busca, setBusca] = useState('')
   const [carregando, setCarregando] = useState(true)
@@ -54,7 +56,13 @@ export default function Fornecedores() {
   }
 
   async function excluir(fornecedor) {
-    if (!confirm(`Excluir o fornecedor ${fornecedor.nome}?`)) return
+    const ok = await confirmar({
+      titulo: 'Excluir fornecedor',
+      mensagem: `Quer mesmo excluir ${fornecedor.nome}? Essa ação não pode ser desfeita.`,
+      textoConfirmar: 'Excluir',
+      perigo: true,
+    })
+    if (!ok) return
     await api.delete(`/fornecedores/${fornecedor.id}`)
     carregar()
   }
