@@ -23,10 +23,17 @@ from app.routers import (
 
 load_dotenv()
 
+# Em produção (Railway) a documentação da API fica desligada -- evita expor
+# publicamente a lista de rotas do sistema. Localmente continua em /docs.
+em_producao = bool(os.environ.get("RAILWAY_ENVIRONMENT_NAME") or os.environ.get("RAILWAY_ENVIRONMENT"))
+
 app = FastAPI(
     title="Controle de Frota API",
     description="API do sistema de controle de frota (máquinas, manutenções, abastecimentos, notas fiscais, checklist).",
     version="0.1.0",
+    docs_url=None if em_producao else "/docs",
+    redoc_url=None if em_producao else "/redoc",
+    openapi_url=None if em_producao else "/openapi.json",
 )
 
 frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
